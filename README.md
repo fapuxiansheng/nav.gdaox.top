@@ -1,56 +1,72 @@
 # promo-site｜推广二级域名导航站
 
 独立 Hugo + PaperMod 静态站，域名 `nav.gdaox.top`，部署目标 Cloudflare Pages。
-当前为**阶段一「空链版」**：工具介绍、广告标识、关于页齐全，卡片按钮自动渲染为「入口待开放」，用于任推邦报备截图，无任何坏链。
+当前为**阶段一「空链版」**：工具介绍、广告标识、佣金声明、关于页齐全，卡片按钮自动渲染为不可点的「入口待开放」，用于任推邦报备截图，无任何坏链。
 
-**本地状态（2026-11-07）**：Hugo v0.166.0 `hugo --gc --minify --cleanDestinationDir` exit 0；`python check_build.py` **19/19 通过、阻断 0**；public 仅 6 个文件（首页／关于／CSS／404／robots／sitemap，sitemap 2 条 URL）。**尚未建 GitHub 仓库、未 push、未绑域名、未上线、未提交报备。**
+**本地状态（2026-11-07）**
+
+- **主题**：PaperMod 官方 GitHub master HEAD `118119693d8b5ac211b939775678310973bcb232`（2026-10-25），直接拉取后 vendored 进仓库，**零补丁**；主题 `min_version = 0.158.0`。旧版主博客主题副本已弃用。
+- **构建**：Hugo v0.166.0 `hugo --gc --minify` exit 0、**0 条 WARN**；`python check_build.py` **19/19 通过、阻断 0**；public 仅 6 个文件（首页／关于／CSS／404／robots／sitemap），sitemap 2 条，canonical 指向 `https://nav.gdaox.top/`。
+- **仓库**：本地独立 git 仓库已建（分支 `main`，首次提交 `4f2b9fd`，134 个文件），**无 remote、未 push**。
+- **未执行**：GitHub 远程仓库、CF 绑定域名、DNS、上线、任推邦报备。
 
 ## 目录
 
 ```
-hugo.toml                     站点配置
-data/tools.yaml               链接唯一真源（4 张卡片）
-layouts/index.html            首页模板（覆盖 define "main"）
-content/_index.md             首页对象（仅 front matter）
-content/about.md              关于页（主体 / 广告声明 / 内容边界）
+hugo.toml                      站点配置
+data/tools.yaml                链接唯一真源（4 张卡片）
+layouts/index.html             首页模板（覆盖 define "main"）
+content/_index.md              首页对象（仅 front matter）
+content/about.md               关于页（主体 / 广告声明 / 内容边界）
 assets/css/extended/custom.css 卡片样式（PaperMod 官方扩展位）
-themes/PaperMod/              主博客同版 vendored 主题副本
-check_build.py                构建产物自检（纯标准库、只读 public/）
+themes/PaperMod/               官方最新版 PaperMod vendored 副本（非 submodule）
+check_build.py                 构建产物自检（纯标准库、只读 public/）
 .gitignore / README.md
 ```
 
 ## 关键约定
 
 - 链接唯一真源 = `data/tools.yaml`。换推广链接**只改这一个文件**的 `url` 与 `verify`，不需要改模板、不需要 Worker。
-- `url` 为 `REPLACE_WITH_RENTUIBANG_URL` 时，`layouts/index.html` 自动把按钮渲染为不可点的「入口待开放」，并显示「资料入口准备中」提示；替换成真实链接后按钮自动变为可点击（带 `rel="sponsored nofollow noopener"`），**一次 push 即切正式版**，模板不用动。
-- 主题 `themes/PaperMod` 是**从主博客同版复制的 vendored 副本**（非 submodule）：与主博客风格严格一致、离线可构建、CF Pages 不需要递归子模块。更新主题时从主博客仓库同步，或重新拉取官方版本覆盖。
-- 主题副本已做 Hugo 0.166 兼容修复（3 处 `partial "partials/…"` 前缀去掉；`opengraph.html` / `twitter_cards.html` 移除已废弃的 `site.Social` 分支）。配合 `disableKinds` + `taxonomies = {}` 关掉 RSS 与空分类页，避开旧主题对 `site.Author` 等已移除字段的引用。
+- `url` 为 `REPLACE_WITH_RENTUIBANG_URL` 时，`layouts/index.html` 自动把按钮渲染为不可点的「入口待开放」并显示阶段提示；替换成真实链接后自动变为带 `rel="sponsored nofollow noopener"` 的可点按钮，**一次 push 即切正式版**，模板不用动。数据访问用 `hugo.Data`（`.Site.Data` 已弃用）。
+- 主题是**官方最新版整目录副本**：从 GitHub 拉取、去掉嵌套 `.git`、不改任何主题源码。新版用 `layouts/_partials/`（Hugo 0.146+ 新布局结构），与旧版主博客主题的 `layouts/partials/` 不通用，**不要再复制主博客主题目录**。vendored 而非 submodule 的原因：CF Pages 不需要递归子模块，离线可构建，版本可锁死在一个 commit。
+- `disableKinds = ["RSS","taxonomy","term"]` + `taxonomies = {}` 是**主动瘦身**（本站只有首页＋关于页，sitemap 只保留 2 条），**不是兼容补丁**；已验证去掉这些项、用官方最新版主题也能在 Hugo 0.166 原生构建通过。
 - 首页由 `layouts/index.html` 的 `define "main"` 渲染，PaperMod 的 head/footer/menu 仍由主题 `baseof.html` 提供。**不要**把卡片写回 `content/_index.md` 的内联 HTML（Goldmark 默认会丢弃）。
-- 构建只剩 1 条主题自身的 `.Language.LanguageDirection` deprecated WARN，不阻断；CF Pages 固定同一 Hugo 版本，不会漂移。
+- `locale = "zh-cn"`（不是已弃用的 `languageCode`）；`[markup.goldmark.renderer] unsafe = false` 保持默认，不开放注入面。
 
 ## 本地构建与门禁
 
 ```bash
 cd "E:/我的文档/文档/Default Project/15_项目/promo-site"
-hugo version                                    # v0.166.0 → CF Pages 的 HUGO_VERSION 填 0.166.0
-hugo server -D                                  # 本地预览 http://localhost:1313
-hugo --gc --minify --cleanDestinationDir        # 复现线上构建（本地反复构建务必带 cleanDestinationDir）
-python check_build.py                           # 产物自检；0=全绿，1=阻断
+hugo version                              # v0.166.0 → CF Pages 的 HUGO_VERSION 填 0.166.0
+hugo server -D                            # 本地预览 http://localhost:1313
+rm -rf public && hugo --gc --minify       # 复现线上构建
+python check_build.py                     # 产物自检；0=全绿，1=阻断
 ```
+
+> **坑**：`--cleanDestinationDir` 并**不清理**上一轮遗留的文件。换主题、改 `disableKinds` 或 CSS 后必须 `rm -rf public` 再构建，否则 public 里会残留旧的空分类页与旧 fingerprint CSS，导致产物清单误判。
 
 `check_build.py` 自动识别阶段一/阶段二：阶段一校验 4 个按钮全部禁用且无坏链；阶段二校验 4 个可点按钮的 `rel/target` 合规且无占位符。同时检查 canonical、广告标识、佣金声明、sitemap 域名、CSS 注入、本地路径泄漏。
 
+## 主题升级（可选）
+
+```bash
+TMP=../_papermod_latest_tmp
+git clone --depth 1 https://github.com/adityatelange/hugo-PaperMod.git "$TMP"
+git -C "$TMP" log -1 --format="%H %ci %s"     # 记录新 commit sha，写进本文件「本地状态」
+mv themes/PaperMod ../_改前备份/推广导航站_20261107/PaperMod_backup
+cp -r "$TMP" themes/PaperMod && rm -rf themes/PaperMod/.git "$TMP"
+rm -rf public && hugo --gc --minify && python check_build.py
+```
+
+升级后必须复跑门禁；若新版主题抬高 `min_version`，CF Pages 的 `HUGO_VERSION` 要同步上调。
+
 ## 部署（以下动作由景行本人在账号下执行，AI 不碰凭据、不推送）
 
-1. 在 GitHub 新建**独立**仓库（不并入主博客仓库），然后：
+1. 在 GitHub 新建**空的独立仓库**（不要初始化 README，不要并入主博客仓库），然后：
 
 ```bash
 cd "E:/我的文档/文档/Default Project/15_项目/promo-site"
-git init
-git add .
-git commit -m "init: 推广导航站空链版"
-git branch -M main
-git remote add origin <你的 GitHub 仓库 URL>
+git remote add origin https://github.com/YOUR_ACCOUNT/promo-site.git   # 换成你自己的仓库 URL
 git push -u origin main
 ```
 
@@ -69,7 +85,7 @@ git push -u origin main
 
 4. 任推邦逐项目绑定服务商 → 拿 UID/UK 码与绑定截图 → 「申请推广」填「自有网站 + 落地页 URL + 首页/关于页截图」→ 等审核。**逐项目核对当期「有效动作定义」**（网盘类＝注册＋首次转存，AI 类机制不同）。
 
-5. 审核通过后，把 `data/tools.yaml` 的占位符换成真实分享链接/口令，改 `verify` 日期，复跑 `hugo …` + `python check_build.py`（应自动切到「正式版」判定），再 commit + push，CF 自动重建。
+5. 审核通过后，把 `data/tools.yaml` 的占位符换成真实分享链接/口令，改 `verify` 日期，复跑 `rm -rf public && hugo --gc --minify` + `python check_build.py`（应自动切到「正式版」判定），再 commit + push，CF 自动重建。
 
 ## 上线验收
 
