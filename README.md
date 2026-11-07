@@ -1,6 +1,6 @@
 # promo-site｜推广二级域名导航站
 
-独立 Hugo + PaperMod 静态站，域名 `nav.gdaox.top`，部署目标 Cloudflare Pages。
+独立 Hugo + PaperMod 静态站，域名 `nav.gdaox.top`，**已在 Cloudflare Pages 正式上线**（项目 `nav-gdaox-top`）。
 当前为**阶段一「空链版」**：工具介绍、广告标识、佣金声明、关于页齐全，卡片按钮自动渲染为不可点的「入口待开放」，用于任推邦报备截图，无任何坏链。
 
 **本地状态（2026-11-07）**
@@ -10,7 +10,8 @@
 - **仓库**：本地独立 git 仓库（分支 `main`，首次提交 `4f2b9fd`，134 个文件）；**2026-11-07 13:40 已推送到 `https://github.com/fapuxiansheng/nav.gdaox.top`**（空仓库首次推送，远端 HEAD = 本地 `01df2cd0e591380fffabb9d35cd6271d0859b352`，`main` 已设 upstream）。提交作者沿用本机全局配置 `LiuChuan <oysq95@163.com>`。
 - **口径定案（13:04）**：景行令「按建议执行」→ 首期 4 个项目（3 网盘＋1 AI）、挂链扩口径已按 `AGENTS.md` 第 5 条记入总纲变更台账 **#21**、关于页主体沿用株洲观道行文化科技有限公司、短链点击统计层不启用。站点代码未因此改动。
 - **预览链接（13:15，仅预览）**：已把构建产物 `public/` 通过 WorkBuddy 应用发布成在线预览 `https://netdisk-ai-tools-nav.app.workbuddy.host/?sharecode=HSD6UYHMRP`（首页 200、4 张卡片／广告标识齐全，CSS 与 `/about/` 经分享鉴权后 200）。**这不是 `nav.gdaox.top` 正式上线**：canonical／sitemap／robots 仍指向正式域名；分享链接的子路径需带 cookie 或 sharecode，匿名请求会返回 403「链接不完整」，属平台鉴权行为、非站点故障。重建 `public/` 后须重新发布才会同步线上预览。
-- **未执行（账号侧，仍由景行本人操作）**：CF Pages Connect to Git、`nav.gdaox.top` 自定义域名绑定 / DNS / SSL、正式上线、任推邦报备。当前 `nav.gdaox.top` 解析返回 NXDOMAIN，GitHub Pages 未启用（API 404），**代码已上云但站点尚未对外可访问**。
+- **已正式上线（本轮，景行授权浏览器操作 CF 面板）**：CF **Pages 项目** `nav-gdaox-top`（走「继续前往 Pages」旧版工作流）连同一仓库，构建 `hugo --gc --minify` / 输出 `public` / 分支 `main` / 变量 `HUGO_VERSION=0.166.0`。预览 `https://nav-gdaox-top.pages.dev` 与正式域名 **`https://nav.gdaox.top/`** 均 200；DNS 为 `CNAME nav → nav-gdaox-top.pages.dev`（已代理）。线上验收：4 张卡片／4 个「入口待开放」／广告标识／佣金声明、CSS、`/about/`、`/sitemap.xml`、`/robots.txt` 全 200，canonical 指向正式域名。
+- **未执行（账号侧）**：任推邦逐项目报备、审核通过后回填真实分享链接并切正式版、归因自测。
 
 ## 目录
 
@@ -62,7 +63,7 @@ rm -rf public && hugo --gc --minify && python check_build.py
 
 升级后必须复跑门禁；若新版主题抬高 `min_version`，CF Pages 的 `HUGO_VERSION` 要同步上调。
 
-## 部署（步骤 1 已完成；步骤 2–5 由景行本人在账号下执行）
+## 部署（步骤 1–3 已完成，站点已上线；步骤 4–5 待景行本人执行）
 
 1. **已完成（2026-11-07 13:40）**：景行新建空的独立 GitHub 仓库 `fapuxiansheng/nav.gdaox.top`（公开、默认分支 `main`）并给出 URL，按逐次下令完成首次推送：
 
@@ -79,18 +80,21 @@ git branch --set-upstream-to=origin/main main  # 脚本 push 不带 -u，补设 
 
 > **★ 推送网络坑（本机环境）**：WorkBuddy 运行期注入的 `HTTPS_PROXY=http://127.0.0.1:<端口>` 对 GitHub 会返回 `CONNECT tunnel failed, response 502`，而**直连可用**。可靠推送脚本会自动读取该代理，所以必须临时去掉它：`env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy python git_push.py --repo …`（脚本随即走「直连 + 钉 IPv4 + HTTP/1.1」策略，实测第一次即成功）。同理，直接 `git push` 也要 `env -u … git push`。脚本本次另报 `git-credential-manager.exe store: No such file or directory`（凭据助手路径配置有误）但**推送本身成功**；若日后报认证失败，需景行本人修 credential helper 或重新登录，AI 不碰凭据。
 
-2. Cloudflare → Workers & Pages → 创建 → Pages → Connect to Git，选该仓库：
+2. **已完成**：Cloudflare → Workers & Pages → 创建应用程序 → 页面底部「**需要使用旧版 Pages 工作流？继续前往 Pages**」→「导入现有 Git 存储库」→ GitHub → 选 `fapuxiansheng/nav.gdaox.top`：
 
-| 设置 | 值 |
+| 设置 | 实际值 |
 |---|---|
-| Framework preset | Hugo |
+| 项目名 / 预览域 | `nav-gdaox-top` / `nav-gdaox-top.pages.dev` |
+| Framework preset | 无（手动填构建指令） |
 | Build command | `hugo --gc --minify` |
 | Build output directory | `public` |
 | Root directory | 留空 |
 | Production branch | `main` |
 | 环境变量 | `HUGO_VERSION` = `0.166.0` |
 
-3. Custom domains → Set up a custom domain → 填 **`nav.gdaox.top`**（主机名，不带路径）。域名 NS 在 CF，CNAME 会自动添加；等 SSL 签发完成后访问 `https://nav.gdaox.top/`。
+> **★ 最大坑**：CF 新的「创建应用程序」默认建 **Workers 项目**（部署命令 `npx wrangler deploy`、构建命令「无」），Hugo 静态站在 CI 里会被 wrangler 自动探测后卡在交互式确认（`fallback no`）而构建失败，手动部署只得到 `Hello world`。**必须点创建页底部的「继续前往 Pages」**（URL 形如 `/pages/new/provider/github`），才有构建命令／输出目录／`HUGO_VERSION` 这些真 Pages 配置项。该账户里旧的 Workers 项目 `nav-gdaox-top` 即此坑的产物，未删除、仍连着本仓库，今后每次 push 会多一条失败构建；清理需景行另行下令。
+
+3. **已完成**：Pages 项目 → 自定义域 → 设置自定义域 → 填 **`nav.gdaox.top`**（主机名，不带路径）→ 确认 `CNAME nav → nav-gdaox-top.pages.dev` → 激活域。CF 自动把 DNS 改成该记录（已代理），替换掉原有 Worker 类型记录。激活窗口内可能短暂 **522**、面板状态显示「正在初始化」，稍后即恢复 200；**面板状态刷新滞后，以线上实测为准**。
 
 4. 任推邦逐项目绑定服务商 → 拿 UID/UK 码与绑定截图 → 「申请推广」填「自有网站 + 落地页 URL + 首页/关于页截图」→ 等审核。**逐项目核对当期「有效动作定义」**（网盘类＝注册＋首次转存，AI 类机制不同）。
 
@@ -98,11 +102,14 @@ git branch --set-upstream-to=origin/main main  # 脚本 push 不带 -u，补设 
 
 ## 上线验收
 
-- `python check_build.py` 19/19 通过、exit 0
-- canonical / sitemap.xml / robots.txt 均指向 `https://nav.gdaox.top/`，不是 `pages.dev`
-- `/about/`、`/sitemap.xml`、`/robots.txt` 线上 200；首页可见「广告｜推广链接」与佣金声明
-- 归因自测：无痕窗口点卡片 → 落地 URL 参数完整 → 完成一次注册+转存 → 任推邦后台 T+2 看回传。**归因不通不扩量。**
+**已验收（本轮，正式域名 `https://nav.gdaox.top/`）**：
+
+- `python check_build.py` 19/19 通过、exit 0（本地产物零改动）
+- canonical `https://nav.gdaox.top/`，sitemap 2 条均指向正式域名，不是 `pages.dev`
+- 首页 200：4 张卡片／4 个「入口待开放」／「广告｜推广链接」／佣金声明「不会增加你的费用」；线上 CSS 含 `.tool-btn`／`.tool-card`／`.stage-note` 且 200
+- `/about/`、`/sitemap.xml`、`/robots.txt` 线上均 200
+- 归因自测（**待真实链接回填后做**）：无痕窗口点卡片 → 落地 URL 参数完整 → 完成一次注册+转存 → 任推邦后台 T+2 看回传。**归因不通不扩量。**
 
 ## 红线
 
-不自动发布上线；不上传资源文件到本站；不堆项目（首期 4 个）；不放佣金数字、不承诺收益；仅公版/授权/自产资源；不与主博客互链；不碰 `.env` 等凭据文件。
+上线动作按景行**逐次下令**执行，AI 不碰凭据（仅复用浏览器已有登录态）、不代点任推邦报备提交；不上传资源文件到本站；不堆项目（首期 4 个）；不放佣金数字、不承诺收益；仅公版/授权/自产资源；不与主博客互链；不碰 `.env` 等凭据文件。
