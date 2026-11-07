@@ -8,6 +8,7 @@
 - **主题**：PaperMod 官方 GitHub master HEAD `118119693d8b5ac211b939775678310973bcb232`（2026-10-25），直接拉取后 vendored 进仓库，**零补丁**；主题 `min_version = 0.158.0`。旧版主博客主题副本已弃用。
 - **构建**：Hugo v0.166.0 `hugo --gc --minify` exit 0、**0 条 WARN**；`python check_build.py` **19/19 通过、阻断 0**；public 仅 6 个文件（首页／关于／CSS／404／robots／sitemap），sitemap 2 条，canonical 指向 `https://nav.gdaox.top/`。
 - **仓库**：本地独立 git 仓库已建（分支 `main`，首次提交 `4f2b9fd`，134 个文件），**无 remote、未 push**。
+- **口径定案（13:04）**：景行令「按建议执行」→ 首期 4 个项目（3 网盘＋1 AI）、挂链扩口径已按 `AGENTS.md` 第 5 条记入总纲变更台账 **#21**、关于页主体沿用株洲观道行文化科技有限公司、短链点击统计层不启用。站点代码未因此改动。
 - **未执行**：GitHub 远程仓库、CF 绑定域名、DNS、上线、任推邦报备。
 
 ## 目录
