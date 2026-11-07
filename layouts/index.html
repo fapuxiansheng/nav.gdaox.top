@@ -1,0 +1,35 @@
+{{ define "main" }}
+{{ $pending := len (where hugo.Data.tools "url" "REPLACE_WITH_RENTUIBANG_URL") }}
+<header class="page-header">
+  <h1 class="page-title">{{ .Site.Params.homeInfoParams.Title }}</h1>
+  <p class="page-desc">{{ .Site.Params.homeInfoParams.Content }}</p>
+</header>
+
+<p class="ad-label">广告｜推广链接</p>
+
+{{ if gt $pending 0 }}
+<p class="stage-note">资料入口正在准备中，当前页面用于渠道说明与推广报备；入口开放后，下方按钮会变为可点击。</p>
+{{ end }}
+
+<div class="tool-grid">
+  {{ range hugo.Data.tools }}
+  <div class="tool-card">
+    <span class="tool-kind">{{ .kind }}</span>
+    <h3>{{ .name }}</h3>
+    <p>{{ .desc }}</p>
+    <p class="tool-note">{{ .note }}</p>
+    {{ if eq .url "REPLACE_WITH_RENTUIBANG_URL" }}
+    <span class="tool-btn tool-btn-pending">入口待开放</span>
+    {{ else }}
+    <a class="tool-btn" href="{{ .url }}" target="_blank" rel="sponsored nofollow noopener">{{ .action }}</a>
+    {{ end }}
+    <span class="tool-verify">{{ if eq .url "REPLACE_WITH_RENTUIBANG_URL" }}资料整理：{{ .verify }}{{ else }}链接核对：{{ .verify }}{{ end }}</span>
+  </div>
+  {{ end }}
+</div>
+
+<blockquote class="promo-note">
+  <p>声明：本页部分链接为推广链接。若你通过链接完成注册或保存，运营方可能获得平台佣金，<strong>不会增加你的费用</strong>。本站仅做工具与资料介绍，不存储影音及盗版资源。</p>
+  <p>详情见 <a href="/about/">关于本站</a>。</p>
+</blockquote>
+{{ end }}

@@ -1,0 +1,32 @@
+.page-header { margin: 1.5rem 0 0; }
+.page-title { font-size: 1.6rem; }
+.page-desc { opacity: .85; font-size: 14px; }
+.ad-label {
+  display: inline-block; margin-top: 1.25rem; padding: 2px 10px;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-size: 12px; color: var(--secondary);
+}
+.stage-note {
+  margin: 1rem 0 0; padding: 10px 14px; font-size: 13px;
+  border: 1px dashed var(--border); border-radius: 8px; color: var(--secondary);
+}
+.tool-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px; margin: 1rem 0 2rem;
+}
+.tool-card {
+  border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+  background: var(--entry); transition: transform .2s, border-color .2s;
+}
+.tool-card:hover { transform: translateY(-3px); border-color: var(--primary); }
+.tool-kind { font-size: 12px; color: var(--secondary); }
+.tool-card h3 { margin: 6px 0 8px; font-size: 18px; }
+.tool-card p { font-size: 14px; opacity: .85; margin: 0 0 10px; }
+.tool-card p.tool-note { font-size: 13px; }
+.tool-btn {
+  display: inline-block; padding: 6px 14px; border-radius: 8px;
+  background: var(--primary); color: #fff; font-size: 14px; text-decoration: none;
+}
+.tool-btn-pending { background: var(--border); color: var(--secondary); cursor: default; }
+.tool-verify { display: block; margin-top: 10px; font-size: 12px; color: var(--secondary); }
+.promo-note { border-left: 3px solid var(--border); padding-left: 1rem; font-size: 14px; opacity: .9; }

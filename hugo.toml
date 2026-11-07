@@ -1,0 +1,53 @@
+baseURL = "https://nav.gdaox.top/"
+locale = "zh-cn"
+title = "实用网盘与 AI 工具合集"
+theme = "PaperMod"
+timeZone = "Asia/Shanghai"
+enableRobotsTXT = true
+# 主动精简（非兼容补丁）：本站只有首页 + 关于页，不生成 RSS 与空分类/标签页，
+# sitemap 只保留 2 条 URL。已验证官方最新版 PaperMod 不加此项也能在 Hugo 0.166 原生构建。
+disableKinds = ["RSS", "taxonomy", "term"]
+taxonomies = {}
+
+[outputs]
+  home = ["HTML"]
+  page = ["HTML"]
+  section = ["HTML"]
+
+# 首页由 layouts/index.html 渲染，不是 Markdown 内联 HTML。
+# 保持 Goldmark 默认 unsafe=false：既不丢原始 HTML，也不开放注入面。
+[markup.goldmark.renderer]
+  unsafe = false
+
+[params]
+  description = "常用网盘与 AI 工具的资料入口整理，页面含推广链接"
+  ShowReadingTime = false
+  ShowShareButtons = false
+  ShowPostNavLinks = false
+  ShowBreadCrumbs = false
+  ShowCodeCopyButtons = false
+  ShowToc = false
+  disableSpecial1stPost = true
+  disableScrollToTop = false
+  defaultTheme = "auto"
+  homeInfoParams = { Title = "实用网盘与 AI 工具合集", Content = "按用途整理常用云盘与 AI 工具的资料入口。本页含推广链接，详见页面底部声明与「关于」。" }
+  socialIcons = []
+
+[params.assets]
+  disableHLJS = true
+
+# Cloudflare Web Analytics 首期不接：PaperMod 不自带注入点，仅填 siteToken 不会生效。
+# 若以后要开，需同时从主博客移植 layouts/partials/extend_head.html（该 token 为公开字符串，非密钥）。
+
+[[menu.main]]
+  name = "首页"
+  url = "/"
+  weight = 1
+[[menu.main]]
+  name = "关于"
+  url = "/about/"
+  weight = 2
+
+[sitemap]
+  changefreq = "weekly"
+  priority = 0.5
