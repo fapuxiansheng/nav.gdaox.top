@@ -7,10 +7,10 @@
 
 - **主题**：PaperMod 官方 GitHub master HEAD `118119693d8b5ac211b939775678310973bcb232`（2026-10-25），直接拉取后 vendored 进仓库，**零补丁**；主题 `min_version = 0.158.0`。旧版主博客主题副本已弃用。
 - **构建**：Hugo v0.166.0 `hugo --gc --minify` exit 0、**0 条 WARN**；`python check_build.py` **19/19 通过、阻断 0**；public 仅 6 个文件（首页／关于／CSS／404／robots／sitemap），sitemap 2 条，canonical 指向 `https://nav.gdaox.top/`。
-- **仓库**：本地独立 git 仓库已建（分支 `main`，首次提交 `4f2b9fd`，134 个文件），**无 remote、未 push**。
+- **仓库**：本地独立 git 仓库（分支 `main`，首次提交 `4f2b9fd`，134 个文件）；**2026-11-07 13:40 已推送到 `https://github.com/fapuxiansheng/nav.gdaox.top`**（空仓库首次推送，远端 HEAD = 本地 `01df2cd0e591380fffabb9d35cd6271d0859b352`，`main` 已设 upstream）。提交作者沿用本机全局配置 `LiuChuan <oysq95@163.com>`。
 - **口径定案（13:04）**：景行令「按建议执行」→ 首期 4 个项目（3 网盘＋1 AI）、挂链扩口径已按 `AGENTS.md` 第 5 条记入总纲变更台账 **#21**、关于页主体沿用株洲观道行文化科技有限公司、短链点击统计层不启用。站点代码未因此改动。
 - **预览链接（13:15，仅预览）**：已把构建产物 `public/` 通过 WorkBuddy 应用发布成在线预览 `https://netdisk-ai-tools-nav.app.workbuddy.host/?sharecode=HSD6UYHMRP`（首页 200、4 张卡片／广告标识齐全，CSS 与 `/about/` 经分享鉴权后 200）。**这不是 `nav.gdaox.top` 正式上线**：canonical／sitemap／robots 仍指向正式域名；分享链接的子路径需带 cookie 或 sharecode，匿名请求会返回 403「链接不完整」，属平台鉴权行为、非站点故障。重建 `public/` 后须重新发布才会同步线上预览。
-- **未执行**：GitHub 远程仓库、CF 绑定域名、DNS、正式上线、任推邦报备。
+- **未执行（账号侧，仍由景行本人操作）**：CF Pages Connect to Git、`nav.gdaox.top` 自定义域名绑定 / DNS / SSL、正式上线、任推邦报备。当前 `nav.gdaox.top` 解析返回 NXDOMAIN，GitHub Pages 未启用（API 404），**代码已上云但站点尚未对外可访问**。
 
 ## 目录
 
@@ -62,15 +62,22 @@ rm -rf public && hugo --gc --minify && python check_build.py
 
 升级后必须复跑门禁；若新版主题抬高 `min_version`，CF Pages 的 `HUGO_VERSION` 要同步上调。
 
-## 部署（以下动作由景行本人在账号下执行，AI 不碰凭据、不推送）
+## 部署（步骤 1 已完成；步骤 2–5 由景行本人在账号下执行）
 
-1. 在 GitHub 新建**空的独立仓库**（不要初始化 README，不要并入主博客仓库），然后：
+1. **已完成（2026-11-07 13:40）**：景行新建空的独立 GitHub 仓库 `fapuxiansheng/nav.gdaox.top`（公开、默认分支 `main`）并给出 URL，按逐次下令完成首次推送：
 
 ```bash
 cd "E:/我的文档/文档/Default Project/15_项目/promo-site"
-git remote add origin https://github.com/YOUR_ACCOUNT/promo-site.git   # 换成你自己的仓库 URL
-git push -u origin main
+git remote add origin https://github.com/fapuxiansheng/nav.gdaox.top.git
+git fetch origin --quiet                       # 项目纪律：push 前必先 fetch
+python "E:/我的文档/文档/Default Project/WorkBuddy-OC/06_脚本/根目录/git_push.py" \
+  --repo "E:/我的文档/文档/Default Project/15_项目/promo-site" --max-attempts 3 --max-seconds 150
+git branch --set-upstream-to=origin/main main  # 脚本 push 不带 -u，补设 upstream
 ```
+
+后续改文件只需正常 `git add` → `git commit` → `git push`（已设 upstream）；走项目脚本时记得带 `--repo` 指向本目录。
+
+> **★ 推送网络坑（本机环境）**：WorkBuddy 运行期注入的 `HTTPS_PROXY=http://127.0.0.1:<端口>` 对 GitHub 会返回 `CONNECT tunnel failed, response 502`，而**直连可用**。可靠推送脚本会自动读取该代理，所以必须临时去掉它：`env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy python git_push.py --repo …`（脚本随即走「直连 + 钉 IPv4 + HTTP/1.1」策略，实测第一次即成功）。同理，直接 `git push` 也要 `env -u … git push`。脚本本次另报 `git-credential-manager.exe store: No such file or directory`（凭据助手路径配置有误）但**推送本身成功**；若日后报认证失败，需景行本人修 credential helper 或重新登录，AI 不碰凭据。
 
 2. Cloudflare → Workers & Pages → 创建 → Pages → Connect to Git，选该仓库：
 
