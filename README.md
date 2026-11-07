@@ -9,7 +9,8 @@
 - **构建**：Hugo v0.166.0 `hugo --gc --minify` exit 0、**0 条 WARN**；`python check_build.py` **19/19 通过、阻断 0**；public 仅 6 个文件（首页／关于／CSS／404／robots／sitemap），sitemap 2 条，canonical 指向 `https://nav.gdaox.top/`。
 - **仓库**：本地独立 git 仓库已建（分支 `main`，首次提交 `4f2b9fd`，134 个文件），**无 remote、未 push**。
 - **口径定案（13:04）**：景行令「按建议执行」→ 首期 4 个项目（3 网盘＋1 AI）、挂链扩口径已按 `AGENTS.md` 第 5 条记入总纲变更台账 **#21**、关于页主体沿用株洲观道行文化科技有限公司、短链点击统计层不启用。站点代码未因此改动。
-- **未执行**：GitHub 远程仓库、CF 绑定域名、DNS、上线、任推邦报备。
+- **预览链接（13:15，仅预览）**：已把构建产物 `public/` 通过 WorkBuddy 应用发布成在线预览 `https://netdisk-ai-tools-nav.app.workbuddy.host/?sharecode=HSD6UYHMRP`（首页 200、4 张卡片／广告标识齐全，CSS 与 `/about/` 经分享鉴权后 200）。**这不是 `nav.gdaox.top` 正式上线**：canonical／sitemap／robots 仍指向正式域名；分享链接的子路径需带 cookie 或 sharecode，匿名请求会返回 403「链接不完整」，属平台鉴权行为、非站点故障。重建 `public/` 后须重新发布才会同步线上预览。
+- **未执行**：GitHub 远程仓库、CF 绑定域名、DNS、正式上线、任推邦报备。
 
 ## 目录
 
