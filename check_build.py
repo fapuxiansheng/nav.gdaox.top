@@ -14,6 +14,9 @@
 （#24/#26 放宽保留但闲置），改校验三步引导、无官网数字、无第三方下载入口。
 按总纲 #28（2026-11-08）：栏目由 4 篇扩为 10 篇，文章页、列表页入链与 sitemap
 断言同步改为 10 篇与 13 条；合规红线与真源校验强度不降低。
+按总纲 #29（2026-11-08，现行）：10 篇换「简洁版」——三步编号改「一、二、三」，
+删参考阅读区、官网链接与核验日期；文章页新增断言：正文无站外链接、正文仅
+1 个邀请 URL 文本、无官网项目页链接与旧结构残留。合规红线一字未松。
 口径分工：首页／关于页／栏目列表页按 #22/#23 加严（不写收益数字、不列诱导词）；
 链接与邀请码只以 data/invite.yaml 为唯一真源，任何页面换码漏改均被阻断。
 """
@@ -164,6 +167,7 @@ chk("列表页含先加入团队/下载 App 引导（#27）",
     all(x in proj_list for x in ("加入团队", "下载 App")))
 chk("列表页不挂官网下载入口（#27）",
     not any(x in proj_list for x in ("rentuiapp.com/app", "rentuibang.top")))
+chk("列表页不挂官网项目页链接（#29）", "rentuiapp.com/xiangmu/" not in proj_list)
 
 for page in PROJ_PAGES:
     name = page.parent.name
@@ -172,15 +176,24 @@ for page in PROJ_PAGES:
         all(x in s for x in ("广告｜推广链接", "推广合作信息", "非招聘", "非收益承诺")))
     chk(name + "：简版不引用官网宣传数字（#27）",
         not any(x in s for x in ("￥", "单笔最高收益", "每单可赚", "正在推广人数")))
-    chk(name + "：三步引导齐全且顺序正确（#27）",
-        all(x in s for x in ("加入团队", "下载 App", "先熟悉", "第一步", "第二步", "第三步"))
-        and s.find("第一步") < s.find("第二步") < s.find("第三步"))
+    chk(name + "：三步引导齐全且顺序正确（#29：一、二、三）",
+        all(x in s for x in ("加入团队", "下载 App", "熟悉规则", "一、", "二、", "三、"))
+        and s.find("一、") < s.find("二、") < s.find("三、"))
     chk(name + "：CTA 已前置到正文之前（#27）",
         "invite-cta" in s and "project-content" in s
         and s.find("invite-cta") < s.find("project-content"))
     chk(name + "：无官网下载/注册入口与官方投放域",
         not any(x in s for x in ("rentuiapp.com/app", "rentuibang.top",
                                  "dt.bd.cn", "66666600", "seo_rtb")))
+    # #29：只留一个邀请链接，正文不附官网／参考／任何站外链接。
+    chk(name + "：无官网项目页链接与参考阅读区（#29）",
+        not any(x in s for x in ("rentuiapp.com/xiangmu/", "参考阅读", "核验日期")))
+    pc = re.search(r'<article class=["\']?project-content["\']?>(.*?)</article>', s, re.S)
+    pc_body = html.unescape(pc.group(1)) if pc else ""
+    chk(name + "：正文无站外链接（#29）",
+        bool(pc) and not re.search(r'<a[^>]+href=["\']?https?://', pc_body))
+    chk(name + "：正文仅含 1 个邀请 URL 文本（#29）",
+        bool(expected_url) and pc_body.count(expected_url) == 1)
     hits = [w for w in BANNED if w in s]
     chk(name + "：无诱导性收益话术", not hits,
         "命中：" + "、".join(hits) if hits else "")

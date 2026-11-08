@@ -12,10 +12,16 @@
 按总纲 #28（2026-11-08）：栏目由 4 篇扩为 10 篇，骨架与全部合规声明
 逐字保留，只把 TL;DR、「项目是什么」、「几条提醒」写成生活化切口；
 新增「10 篇开头与项目说明互不重复」检查，防止扩篇时套模板。
+按总纲 #29（2026-11-08，现行）：10 篇统一改为「简洁版」——场景开头、
+结论前置、加粗锚点、三步清单、双互动钩；**删参考阅读区、官网链接与
+核验日期**，全稿只保留 1 个邀请 URL ＋邀请码，三步编号由「第一步～第三步」
+改为「一、二、三」。新增：全稿 URL 唯一、无 markdown 外链与官网域名、
+结论前置、10 篇专属提醒互不重复；合规声明与真源校验一字未松。
 
 与 check_build.py 分工：后者管构建产物 public/（首页／关于页／栏目列表页
-按 #22/#23 加严；10 篇文章页按 #27 校验三步引导、无官网数字、CTA 前置）。
-本脚本管源稿。链接与邀请码的唯一真源仍是 data/invite.yaml，换码漏改即拦。
+按 #22/#23 加严；10 篇文章页按 #29 校验三步引导、无官网数字、CTA 前置、
+正文无站外链接）。本脚本管源稿。链接与邀请码的唯一真源仍是
+data/invite.yaml，换码漏改即拦。
 """
 from pathlib import Path
 import re
@@ -45,6 +51,10 @@ FORBIDDEN = [
     "https://gdaox.top", "http://gdaox.top",
     "￥", "单笔最高收益", "每单可赚", "正在推广人数", "推广人数",
     "rentuiapp.com/app", "rentuibang.top", "qr-app-download", "应用商店",
+    # #29：旧结构不得回流；全稿只留一个邀请链接，官网域名一律不进源稿。
+    "rentuiapp.com", "## 参考阅读", "核验日期", "## TL;DR",
+    "第一步", "第二步", "第三步", "统一团队邀请入口", "共用这一个入口",
+    "](",
 ]
 
 REQUIRED = [
@@ -54,25 +64,27 @@ REQUIRED = [
     "不收取任何费用",
     "不代收费用、不代结算",
     "以平台当期官方说明为准",
-    "核验日期",
-    "## TL;DR",
-    "## 参考阅读",
-    "任推邦官网项目列表页",
-    "统一团队邀请入口",
     "本站专属邀请码",
-    "共用这一个入口",
     "手动填入",
     "不得直接引用",
-    # #27 简版重心：加入团队 / 下载 App / 先熟悉三步
+    # #29 简洁版：加入团队 / 下载 App / 熟悉规则三步（编号「一、二、三」）
     "加入团队",
     "下载 App",
-    "先熟悉",
-    "第一步",
-    "第二步",
-    "第三步",
+    "熟悉规则",
+    "先把顺序摆对",
     "任推邦 App",
     "本站不提供安装包",
     "结果存在不确定性",
+    # #29 唯一入口与爆款骨架
+    "团队邀请入口",
+    "邀请入口只有一个",
+    "这个项目的第一件事不是发链接",
+    "三步，照着走就行",
+    "几件得说在前面的事",
+    "你会先花十分钟把规则看完",
+    "一、",
+    "二、",
+    "三、",
 ]
 
 rows = []
@@ -129,9 +141,9 @@ for p in POSTS:
     miss = [s for s in REQUIRED if s not in text]
     chk(name + "：必备声明/结构与三步引导齐全", not miss, "缺：" + "、".join(miss) if miss else "")
 
-    chk(name + "：三步引导顺序正确（#27）",
-        text.find("第一步") < text.find("第二步") < text.find("第三步")
-        and all(k in text for k in ("第一步", "第二步", "第三步")))
+    chk(name + "：三步引导顺序正确（#29：一、二、三）",
+        text.find("一、") < text.find("二、") < text.find("三、")
+        and all(k in text for k in ("一、", "二、", "三、")))
 
     hits = [w for w in BANNED if w in text]
     chk(name + "：无诱导性收益话术", not hits, "命中：" + "、".join(hits) if hits else "")
@@ -153,26 +165,49 @@ for p in POSTS:
         bd_links == [INVITE_URL], "实际 %s" % (bd_links or "无"))
     chk(name + "：邀请码手填兜底说明", "手动填入 `" + INVITE_CODE + "`" in text)
 
-    chars = len(re.sub(r"\s", "", text))
-    # 含不可删的固定推广声明、统一邀请链接与参考来源；正文观感约 600–800 字。
-    chk(name + "：简版篇幅 700–1400 字（#27）", 700 <= chars <= 1400, "%d 字" % chars)
+    # #29：全稿只留一个 URL（真源邀请链接），不附官网／参考／任何其它链接。
+    all_urls = re.findall(r"https?://[^\s`)]+", text)
+    chk(name + "：全稿仅 1 个 URL 且为邀请真源（#29）",
+        all_urls == [INVITE_URL], "实际 %s" % (all_urls or "无"))
+    chk(name + "：无 markdown 外链与官网域名（#29）",
+        "](" not in text and "rentuiapp.com" not in text)
+    chk(name + "：结论前置在首个小标题之前（#29）",
+        text.find("这个项目的第一件事不是发链接") < text.find("## "))
 
-# #28：10 篇不得套模板，TL;DR 与「一、这个项目是什么」逐篇互异。
+    chars = len(re.sub(r"\s", "", text))
+    # 含固定推广声明、统一邀请链接与 front matter；正文观感约 950–1050 字。
+    chk(name + "：简洁版篇幅 1050–1350 字（#29）", 1050 <= chars <= 1350, "%d 字" % chars)
+
+# #29：10 篇不得套模板，场景开头／项目说明／专属提醒逐篇互异。
 def section_text(text, start, end):
     a = text.find(start)
     b = text.find(end, a + 1) if a >= 0 else -1
     return text[a:b].strip() if a >= 0 and b > a else ""
 
+
+def plain_body(text):
+    """去掉 front matter 与引用块，只留正文（供去重锚点定位）。"""
+    m = re.match(r"^---\s*\n.*?\n---\s*\n", text, re.S)
+    body = text[m.end():] if m else text
+    return "\n".join(l for l in body.splitlines()
+                     if l.strip() and not l.startswith(">"))
+
+
 texts = [p.read_text(encoding="utf-8") for p in POSTS]
-ledes = [section_text(t, "## TL;DR", "## 一、") for t in texts]
-whats = [section_text(t, "## 一、这个项目是什么", "## 二、") for t in texts]
+plains = [plain_body(t) for t in texts]
+ledes = [p.split("## ", 1)[0].strip().splitlines()[0] if "## " in p else ""
+         for p in plains]
+whats = [section_text(p, "## ", "## 三步，照着走就行") for p in plains]
+notices = [section_text(p, "## 几件得说在前面的事", "**团队邀请入口**") for p in plains]
 
 gi = (ROOT / ".gitignore").read_text(encoding="utf-8")
-chk("稿件数量 = 10（#28）", len(POSTS) == 10, "实际 %d" % len(POSTS))
-chk("10 篇 TL;DR 开头互不重复（#28）",
+chk("稿件数量 = 10（#28/#29）", len(POSTS) == 10, "实际 %d" % len(POSTS))
+chk("10 篇场景开头互不重复（#29）",
     all(ledes) and len(set(ledes)) == len(POSTS))
-chk("10 篇「项目是什么」互不重复（#28）",
+chk("10 篇项目说明互不重复（#29）",
     all(whats) and len(set(whats)) == len(POSTS))
+chk("10 篇专属提醒互不重复（#29）",
+    all(notices) and len(set(notices)) == len(POSTS))
 chk("标题互不重复", len(set(titles)) == len(titles))
 chk("slug 互不重复", len(set(slugs)) == len(slugs))
 chk("栏目 _index.md 存在", (PROJECTS / "_index.md").is_file())
