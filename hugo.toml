@@ -5,7 +5,7 @@ theme = "PaperMod"
 timeZone = "Asia/Shanghai"
 enableRobotsTXT = true
 # 主动精简（非兼容补丁）：本站不生成 RSS 与空分类/标签页，
-# sitemap 只保留首页、关于页、项目介绍栏目及其 4 篇文章。
+# sitemap 只保留首页、关于页、项目介绍栏目及其 10 篇文章。
 # 已验证官方最新版 PaperMod 不加此项也能在 Hugo 0.166 原生构建。
 disableKinds = ["RSS", "taxonomy", "term"]
 taxonomies = {}

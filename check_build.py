@@ -9,9 +9,11 @@
 
 按总纲 #26（2026-11-08）：4 篇项目介绍配套稿挂载为 /projects/ 正式栏目，
 新增首页入链、栏目列表页、4 篇文章页、sitemap 条数与文章页 CTA 校验。
-按总纲 #27（2026-11-08）：4 篇改为简版（正文约 600–800 字），重心为「加入团队 →
+按总纲 #27（2026-11-08）：栏目稿改为简版（正文约 600–800 字），重心为「加入团队 →
 下载 App → 熟悉规则」；CTA 由页尾前置到正文开头；不再引用官网宣传数字
 （#24/#26 放宽保留但闲置），改校验三步引导、无官网数字、无第三方下载入口。
+按总纲 #28（2026-11-08）：栏目由 4 篇扩为 10 篇，文章页、列表页入链与 sitemap
+断言同步改为 10 篇与 13 条；合规红线与真源校验强度不降低。
 口径分工：首页／关于页／栏目列表页按 #22/#23 加严（不写收益数字、不列诱导词）；
 链接与邀请码只以 data/invite.yaml 为唯一真源，任何页面换码漏改均被阻断。
 """
@@ -133,7 +135,7 @@ about_hits = [w for w in BANNED if w in about]
 chk("关于页无补贴比例与收益诱导词", not about_hits,
     "命中：" + "、".join(about_hits) if about_hits else "")
 
-# --- 项目介绍栏目（总纲 #26：4 篇配套稿挂载为正式栏目）---
+# --- 项目介绍栏目（总纲 #26 挂载为正式栏目 / #28 扩为 10 篇）---
 PROJ_DIR = PUB / "projects"
 PROJ_PAGES = sorted(PROJ_DIR.glob("*/index.html")) if PROJ_DIR.is_dir() else []
 proj_list = read(PROJ_DIR / "index.html")
@@ -142,7 +144,7 @@ proj_list = read(PROJ_DIR / "index.html")
 chk("首页含 /projects/ 栏目入链",
     bool(re.search(r'href=["\']?/projects/["\']?', idx)))
 chk("栏目列表页已生成", bool(proj_list))
-chk("4 篇文章页已生成", len(PROJ_PAGES) == 4, "实际 %d" % len(PROJ_PAGES))
+chk("10 篇文章页已生成（#28）", len(PROJ_PAGES) == 10, "实际 %d" % len(PROJ_PAGES))
 
 list_hits = [w for w in BANNED if w in proj_list]
 chk("列表页无补贴比例与收益诱导词", not list_hits,
@@ -152,7 +154,10 @@ chk("列表页不列收益数字（#22/#23 加严）",
 chk("列表页含推广标识与合规定性",
     all(x in proj_list for x in ("广告｜推广链接", "推广合作信息", "非招聘", "非收益承诺")))
 list_slugs = sorted(set(re.findall(r"/projects/([a-z0-9-]+)/", proj_list)))
-chk("列表页收录 4 篇文章入链", len(list_slugs) == 4, "实际 %s" % list_slugs)
+chk("列表页收录 10 篇文章入链（#28）", len(list_slugs) == 10, "实际 %s" % list_slugs)
+# Hugo --minify 输出属性不带引号，须兼容 class=project-card 与 class="project-card"。
+chk("列表页渲染 10 篇文章卡片（#28）",
+    len(re.findall(r"class=[\"']?project-card[\"']?", proj_list)) == 10)
 chk("列表页有 1 个可点团队邀请按钮",
     len(re.findall(r"<a[^>]*invite-btn[^>]*>", proj_list)) == 1)
 chk("列表页含先加入团队/下载 App 引导（#27）",
@@ -209,8 +214,8 @@ urls = re.findall(r"<loc>([^<]+)</loc>", sitemap)
 chk("sitemap 指向最终域名", bool(urls) and all(u.startswith(DOMAIN) for u in urls),
     "%d 条" % len(urls))
 proj_urls = sum("/projects/" in u for u in urls)
-chk("sitemap 含栏目页与 4 篇文章", proj_urls == 5, "实际 %d 条" % proj_urls)
-chk("sitemap 条数 = 7（首页/关于/栏目/4 篇）", len(urls) == 7, "%d 条" % len(urls))
+chk("sitemap 含栏目页与 10 篇文章（#28）", proj_urls == 11, "实际 %d 条" % proj_urls)
+chk("sitemap 条数 = 13（首页/关于/栏目/10 篇）（#28）", len(urls) == 13, "%d 条" % len(urls))
 
 css_dir = PUB / "assets" / "css"
 css_files = list(css_dir.glob("*.css")) if css_dir.is_dir() else []

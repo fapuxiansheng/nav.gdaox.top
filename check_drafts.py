@@ -4,14 +4,17 @@
 用法：python check_drafts.py
 退出码：0 = 全绿；1 = 存在阻断项。
 
-按总纲 #27（2026-11-08）：4 篇改为简版（正文约 600–800 字，含固定
+按总纲 #27（2026-11-08）：栏目稿改为简版（正文约 600–800 字，含固定
 声明与链接的文件约 1300 字），重心从「项目科普」
 转为「引导加入团队 → 下载 App → 熟悉规则」；不再引用官网宣传数字，
 #24/#26 的放宽条款保留但闲置。官网 /app/ 下载页整页带官方投放码
 66666600，故稿件不挂任何第三方下载／注册链接，只做文字引导。
+按总纲 #28（2026-11-08）：栏目由 4 篇扩为 10 篇，骨架与全部合规声明
+逐字保留，只把 TL;DR、「项目是什么」、「几条提醒」写成生活化切口；
+新增「10 篇开头与项目说明互不重复」检查，防止扩篇时套模板。
 
 与 check_build.py 分工：后者管构建产物 public/（首页／关于页／栏目列表页
-按 #22/#23 加严；4 篇文章页按 #27 校验三步引导、无官网数字、CTA 前置）。
+按 #22/#23 加严；10 篇文章页按 #27 校验三步引导、无官网数字、CTA 前置）。
 本脚本管源稿。链接与邀请码的唯一真源仍是 data/invite.yaml，换码漏改即拦。
 """
 from pathlib import Path
@@ -154,8 +157,22 @@ for p in POSTS:
     # 含不可删的固定推广声明、统一邀请链接与参考来源；正文观感约 600–800 字。
     chk(name + "：简版篇幅 700–1400 字（#27）", 700 <= chars <= 1400, "%d 字" % chars)
 
+# #28：10 篇不得套模板，TL;DR 与「一、这个项目是什么」逐篇互异。
+def section_text(text, start, end):
+    a = text.find(start)
+    b = text.find(end, a + 1) if a >= 0 else -1
+    return text[a:b].strip() if a >= 0 and b > a else ""
+
+texts = [p.read_text(encoding="utf-8") for p in POSTS]
+ledes = [section_text(t, "## TL;DR", "## 一、") for t in texts]
+whats = [section_text(t, "## 一、这个项目是什么", "## 二、") for t in texts]
+
 gi = (ROOT / ".gitignore").read_text(encoding="utf-8")
-chk("稿件数量 = 4", len(POSTS) == 4, "实际 %d" % len(POSTS))
+chk("稿件数量 = 10（#28）", len(POSTS) == 10, "实际 %d" % len(POSTS))
+chk("10 篇 TL;DR 开头互不重复（#28）",
+    all(ledes) and len(set(ledes)) == len(POSTS))
+chk("10 篇「项目是什么」互不重复（#28）",
+    all(whats) and len(set(whats)) == len(POSTS))
 chk("标题互不重复", len(set(titles)) == len(titles))
 chk("slug 互不重复", len(set(slugs)) == len(slugs))
 chk("栏目 _index.md 存在", (PROJECTS / "_index.md").is_file())
