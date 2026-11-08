@@ -17,6 +17,13 @@
 按总纲 #29（2026-11-08，现行）：10 篇换「简洁版」——三步编号改「一、二、三」，
 删参考阅读区、官网链接与核验日期；文章页新增断言：正文无站外链接、正文仅
 1 个邀请 URL 文本、无官网项目页链接与旧结构残留。合规红线一字未松。
+P12（2026-11-08，执行动作）：列表页表述精简后加产物层护栏——引导区
+篇幅上限、无内部归因口径、10 张卡片描述互不重复。
+P13（2026-11-08，执行动作）：同页合规声明去重——列表页归口在顶部引用块、
+文章页归口在正文开头 FLAG 块、首页归口在顶部标识行 + 底部 promo-note，
+CTA 区块退化为纯转化模块（不再复述声明）。新增：body 可见文本内关键合规
+短语各恰 1 次、CTA 区块不含任何合规声明词、首页/列表页/文章页各只 1 个
+blockquote（声明块）。
 口径分工：首页／关于页／栏目列表页按 #22/#23 加严（不写收益数字、不列诱导词）；
 链接与邀请码只以 data/invite.yaml 为唯一真源，任何页面换码漏改均被阻断。
 """
@@ -51,6 +58,65 @@ def chk(label, ok, note=""):
     rows.append((label, bool(ok), note))
 
 
+# --- P13（2026-11-08）：同页合规声明唯一性（产物层） ---
+# 只统计 body 可见文本（剔除 head/script/style/注释/标签）——head 里的
+# meta description 也会含这些词，不算页面可见重复。
+P13_ONCE = [
+    "广告｜推广链接",
+    "推广合作信息 · 非招聘 · 非收益承诺",
+    "不会增加你的费用",
+    "不收取任何费用",
+    "不代收费用、不代结算",
+    "当期官方说明为准",
+]
+# 栏目页与文章页额外有的声明词（首页用「本页不是招聘」的表述，故不入此组）。
+P13_ONCE_PROJ = [
+    "本站不设兼职岗位",
+    "结果存在不确定性",
+]
+# 首页特有的声明词：首页只做总声明，不逐篇列「不设兼职岗位」。
+P13_ONCE_HOME = [
+    "本页不是招聘",
+    "不构成任何收益承诺",
+    "无隶属",
+]
+# CTA 区块若出现下列任一词，说明声明被塞回转化模块，回潮。
+P13_CTA_FORBID = [
+    "非招聘", "非收益承诺", "不构成任何收益承诺", "不会增加你的费用",
+    "不收取任何费用", "不代收费用", "不代结算", "不设兼职岗位",
+    "当期官方说明为准", "结果存在不确定性", "无隶属",
+]
+
+
+def body_text(page_html):
+    """取 body 可见文本：剔除 head/script/style/注释与全部标签后反转义。"""
+    s = re.sub(r"<head\b.*?</head>", " ", page_html, flags=re.S | re.I)
+    s = re.sub(r"<script\b.*?</script>", " ", s, flags=re.S | re.I)
+    s = re.sub(r"<style\b.*?</style>", " ", s, flags=re.S | re.I)
+    s = re.sub(r"<!--.*?-->", " ", s, flags=re.S)
+    s = re.sub(r"<[^>]+>", " ", s)
+    return html.unescape(s)
+
+
+def block_text(page_html, css_class):
+    """取某个 class 区块的完整可见文本（如 invite-cta / invite-hero）。
+
+    必须按 </section> 收尾——用非贪婪的 '(.*?)</' 会在第一个 </p> 处截断，
+    漏掉块内后续段落，声明塞回 CTA 时会漏检。
+    """
+    m = re.search(r'<section[^>]*class=["\']?' + css_class + r'["\']?[^>]*>(.*?)</section>',
+                  page_html, re.S | re.I)
+    if not m:
+        return ""
+    return body_text(m.group(1))
+
+
+def chk_once(label, text, keys, note=""):
+    bad = [(k, text.count(k)) for k in keys if text.count(k) != 1]
+    chk(label + "：关键合规短语各恰 1 次（P13 去重）", not bad,
+        (note + "｜" if note else "") + "；".join("%s×%d" % (k, n) for k, n in bad))
+
+
 def read(path):
     return path.read_text(encoding="utf-8") if path.is_file() else ""
 
@@ -80,6 +146,18 @@ chk("非收益承诺", "不构成任何收益承诺" in idx)
 chk("不增加费用声明", "不会增加你的费用" in idx)
 chk("不收费声明", "不收取任何费用" in idx)
 chk("关于页入口", "关于本站" in idx)
+
+# P13：首页关键合规短语在 body 可见文本内各恰 1 次（head meta 不计）。
+_idx_body_txt = body_text(idx)
+chk_once("首页", _idx_body_txt, P13_ONCE)
+chk_once("首页", _idx_body_txt, P13_ONCE_HOME)
+chk("首页只有 1 个声明块（blockquote）（P13 去重）",
+    len(re.findall(r"<blockquote\b", idx, re.I)) == 1,
+    "实际 %d 个" % len(re.findall(r"<blockquote\b", idx, re.I)))
+_hero_txt = block_text(idx, "invite-hero")
+chk("首页 CTA（invite-hero）不含合规声明词（P13 去重）",
+    not any(w in _hero_txt for w in P13_CTA_FORBID),
+    "命中：" + "、".join(w for w in P13_CTA_FORBID if w in _hero_txt))
 
 canon = re.search(r'rel=["\']?canonical["\']?\s+href=["\']?([^"\'>\s]+)', idx)
 chk("canonical 指向最终域名", bool(canon and canon.group(1).startswith(DOMAIN)),
@@ -169,6 +247,37 @@ chk("列表页不挂官网下载入口（#27）",
     not any(x in proj_list for x in ("rentuiapp.com/app", "rentuibang.top")))
 chk("列表页不挂官网项目页链接（#29）", "rentuiapp.com/xiangmu/" not in proj_list)
 
+# P13：列表页关键合规短语在 body 可见文本内各恰 1 次，声明只归口顶部引用块。
+_list_body_txt = body_text(proj_list)
+chk_once("列表页", _list_body_txt, P13_ONCE)
+chk_once("列表页", _list_body_txt, P13_ONCE_PROJ)
+chk("列表页只有 1 个声明块（blockquote）（P13 去重）",
+    len(re.findall(r"<blockquote\b", proj_list, re.I)) == 1,
+    "实际 %d 个" % len(re.findall(r"<blockquote\b", proj_list, re.I)))
+_list_cta_txt = block_text(proj_list, "invite-cta")
+chk("列表页 CTA（invite-cta）不含合规声明词（P13 去重）",
+    not any(w in _list_cta_txt for w in P13_CTA_FORBID),
+    "命中：" + "、".join(w for w in P13_CTA_FORBID if w in _list_cta_txt))
+
+# --- P12：列表页内容表述精简（产物层）---
+_intro_m = re.search(r'<div class=["\']?project-intro["\']?>(.*?)</div>',
+                     proj_list, re.S)
+_intro_html = _intro_m.group(1) if _intro_m else ""
+_intro_open = re.sub(r"<blockquote\b.*?</blockquote>", "", _intro_html, flags=re.S | re.I)
+_intro_txt = html.unescape(re.sub(r"<[^>]+>", " ", _intro_open))
+_intro_chars = len(re.sub(r"\s", "", _intro_txt))
+chk("列表页引导区精简 ≤ 300 字（P12）", 0 < _intro_chars <= 300,
+    "%d 字" % _intro_chars)
+chk("列表页无内部归因口径（P12）",
+    not any(x in proj_list for x in ("归因不归本站", "立即推广",
+                                     "不逐项目申请", "撤下或改写")))
+_card_raw = re.findall(r'class=["\']?project-card["\']?[^>]*>.*?<p>(.*?)</p>',
+                       proj_list, re.S)
+_card_descs = [html.unescape(re.sub(r"<[^>]+>", "", d)).strip() for d in _card_raw]
+chk("列表页 10 张卡片描述互不重复（P12）",
+    len(_card_descs) == 10 and len(set(_card_descs)) == 10,
+    "实际 %d 条 / 去重 %d" % (len(_card_descs), len(set(_card_descs))))
+
 for page in PROJ_PAGES:
     name = page.parent.name
     s = read(page)
@@ -218,6 +327,18 @@ for page in PROJ_PAGES:
         bool(expected_code) and ("<strong>" + expected_code + "</strong>") in s)
     chk(name + "：data 链接与页面一致",
         bool(expected_url) and expected_url in html.unescape(s))
+
+    # P13：文章页关键合规短语在 body 可见文本内各恰 1 次，声明只归口 FLAG 块。
+    _page_body_txt = body_text(s)
+    chk_once(name, _page_body_txt, P13_ONCE)
+    chk_once(name, _page_body_txt, P13_ONCE_PROJ)
+    chk(name + "：只有 1 个声明块（blockquote）（P13 去重）",
+        len(re.findall(r"<blockquote\b", s, re.I)) == 1,
+        "实际 %d 个" % len(re.findall(r"<blockquote\b", s, re.I)))
+    _cta_txt = block_text(s, "invite-cta")
+    chk(name + "：CTA（invite-cta）不含合规声明词（P13 去重）",
+        not any(w in _cta_txt for w in P13_CTA_FORBID),
+        "命中：" + "、".join(w for w in P13_CTA_FORBID if w in _cta_txt))
 
 robots = read(PUB / "robots.txt")
 chk("robots.txt 含 Sitemap 行", "Sitemap" in robots and DOMAIN in robots)

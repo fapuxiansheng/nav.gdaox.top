@@ -22,6 +22,12 @@
 按 #22/#23 加严；10 篇文章页按 #29 校验三步引导、无官网数字、CTA 前置、
 正文无站外链接）。本脚本管源稿。链接与邀请码的唯一真源仍是
 data/invite.yaml，换码漏改即拦。
+P12（2026-11-08，执行动作）：列表页表述精简后加护栏——10 篇卡片描述
+互不重复且不超过 36 字、不回潮旧模板尾巴；栏目引导区不含内部归因口径、
+篇幅有上限；合规引用块逐字保留。
+P13（2026-11-08，执行动作）：同页合规声明去重——每篇只留开头 FLAG 块一处
+完整声明，正文末尾不再复述；新增「关键合规短语全稿各恰 1 次」与「FLAG 块外
+不得再出现合规短语」断言，防止重复声明回潮。
 """
 from pathlib import Path
 import re
@@ -86,6 +92,60 @@ REQUIRED = [
     "二、",
     "三、",
 ]
+
+# --- P13（2026-11-08）：同页合规声明唯一性 ---
+# 每篇稿件的完整合规声明只放在开头 FLAG 块（引用块）一处；正文任何位置
+# 不得再复述这些短语。下列短语全稿各恰 1 次，出现 0 次或 >1 次都判回潮。
+P13_ONCE = [
+    "广告｜推广链接",
+    "推广合作信息 · 非招聘 · 非收益承诺",
+    "不会增加你的费用",
+    "不收取任何费用",
+    "不代收费用、不代结算",
+    "本站不设兼职岗位",
+    "以平台当期官方说明为准",
+]
+# 「结果存在不确定性」是正文风险提示（「几件得说在前面的事」段），
+# 不是 FLAG 块声明词，单独要求全稿恰 1 次。
+P13_RISK = ["结果存在不确定性"]
+# 只允许出现在开头 FLAG 引用块里的声明词（正文区必须为 0 次）。
+P13_FLAG_ONLY = [
+    "广告｜推广链接",
+    "推广合作信息 · 非招聘 · 非收益承诺",
+    "不会增加你的费用",
+    "不收取任何费用",
+    "不代收费用、不代结算",
+    "本站不设兼职岗位",
+    "以平台当期官方说明为准",
+]
+# 旧版正文末尾的复述句（整句），已删除，不得回流。
+P13_ZERO = [
+    "本页不是招聘，也不是兼职岗位；规则、活动状态与结算口径一律以平台当期官方说明为准。",
+    "本页不是招聘，也不是兼职岗位",
+]
+
+
+def plain_body(text):
+    """去掉 front matter 与引用块，只留正文（供去重锚点定位）。"""
+    m = re.match(r"^---\s*\n.*?\n---\s*\n", text, re.S)
+    body = text[m.end():] if m else text
+    return "\n".join(l for l in body.splitlines()
+                     if l.strip() and not l.startswith(">"))
+
+
+def flag_block(text):
+    """取开头 FLAG 引用块（含 '>' 行的连续段落）。"""
+    m = re.match(r"^---\s*\n.*?\n---\s*\n", text, re.S)
+    body = text[m.end():] if m else text
+    lines, on = [], True
+    for ln in body.splitlines():
+        if on and ln.startswith(">"):
+            lines.append(ln)
+        elif on and not ln.strip():
+            continue
+        else:
+            break
+    return "\n".join(lines)
 
 rows = []
 
@@ -178,19 +238,30 @@ for p in POSTS:
     # 含固定推广声明、统一邀请链接与 front matter；正文观感约 950–1050 字。
     chk(name + "：简洁版篇幅 1050–1350 字（#29）", 1050 <= chars <= 1350, "%d 字" % chars)
 
+    # P13：完整合规声明全稿各恰 1 次，且只出现在开头 FLAG 引用块里。
+    cnt_bad = [(k, text.count(k)) for k in P13_ONCE if text.count(k) != 1]
+    chk(name + "：关键合规短语全稿各恰 1 次（P13 去重）", not cnt_bad,
+        "；".join("%s×%d" % (k, n) for k, n in cnt_bad))
+    r_bad = [(k, text.count(k)) for k in P13_RISK if text.count(k) != 1]
+    chk(name + "：正文风险提示恰 1 次（P13 去重）", not r_bad,
+        "；".join("%s×%d" % (k, n) for k, n in r_bad))
+    z_bad = [(k, text.count(k)) for k in P13_ZERO if text.count(k) != 0]
+    chk(name + "：正文末尾合规复述句已删除（P13 去重）", not z_bad,
+        "；".join("%s×%d" % (k, n) for k, n in z_bad))
+    _plain_txt = plain_body(text)
+    f_bad = [(k, _plain_txt.count(k)) for k in P13_FLAG_ONLY if _plain_txt.count(k) != 0]
+    chk(name + "：FLAG 块外无合规声明复述（P13 去重）", not f_bad,
+        "；".join("%s×%d" % (k, n) for k, n in f_bad))
+    _flag_txt = flag_block(text)
+    fb_bad = [(k, _flag_txt.count(k)) for k in P13_FLAG_ONLY if _flag_txt.count(k) != 1]
+    chk(name + "：声明词集中在开头 FLAG 块（P13 去重）", not fb_bad,
+        "；".join("%s×%d" % (k, n) for k, n in fb_bad))
+
 # #29：10 篇不得套模板，场景开头／项目说明／专属提醒逐篇互异。
 def section_text(text, start, end):
     a = text.find(start)
     b = text.find(end, a + 1) if a >= 0 else -1
     return text[a:b].strip() if a >= 0 and b > a else ""
-
-
-def plain_body(text):
-    """去掉 front matter 与引用块，只留正文（供去重锚点定位）。"""
-    m = re.match(r"^---\s*\n.*?\n---\s*\n", text, re.S)
-    body = text[m.end():] if m else text
-    return "\n".join(l for l in body.splitlines()
-                     if l.strip() and not l.startswith(">"))
 
 
 texts = [p.read_text(encoding="utf-8") for p in POSTS]
@@ -199,6 +270,53 @@ ledes = [p.split("## ", 1)[0].strip().splitlines()[0] if "## " in p else ""
          for p in plains]
 whats = [section_text(p, "## ", "## 三步，照着走就行") for p in plains]
 notices = [section_text(p, "## 几件得说在前面的事", "**团队邀请入口**") for p in plains]
+
+# --- P12（2026-11-08）：列表页内容表述精简的防回潮护栏 ---
+DESC_RE = re.compile(r'(?m)^description:\s*"([^"]+)"')
+descs = []
+for _t in texts:
+    _m = DESC_RE.search(_t)
+    descs.append(_m.group(1) if _m else "")
+chk("10 篇均有卡片描述（P12）", all(descs))
+chk("10 篇卡片描述互不重复（P12）", len(set(descs)) == len(POSTS),
+    "重复 %d 条" % (len(descs) - len(set(descs))))
+chk("卡片描述 12–36 字（P12）",
+    all(12 <= len(d) <= 36 for d in descs),
+    "最长 %d 字" % (max((len(d) for d in descs), default=0)))
+chk("卡片描述无旧模板尾巴（P12）",
+    not any(x in d for d in descs for x in
+            ("类项目；", "先加入团队、下载 App", "推广合作信息，含推广链接")))
+
+_idx = (PROJECTS / "_index.md").read_text(encoding="utf-8")
+_idx_body = re.sub(r"(?m)^---\s*\n.*?\n---\s*\n", "", _idx, flags=re.S)
+_idx_body = "\n".join(l for l in _idx_body.splitlines()
+                       if l.strip() and not l.strip().startswith(">"))
+_internal = [w for w in ("归因不归本站", "立即推广", "不逐项目申请",
+                         "撤下或改写", "本站会撤下") if w in _idx_body]
+chk("栏目引导区无内部归因口径（P12）", not _internal,
+    "命中：" + "、".join(_internal) if _internal else "")
+_idx_chars = len(re.sub(r"\s", "", _idx_body))
+chk("栏目引导区精简 ≤ 280 字（P12）", 0 < _idx_chars <= 280,
+    "%d 字" % _idx_chars)
+chk("栏目合规引用块逐字保留（P12）",
+    all(x in _idx for x in ("广告｜推广链接", "推广合作信息 · 非招聘 · 非收益承诺",
+                            "不会增加你的费用", "不收取任何费用",
+                            "不代收费用、不代结算", "以平台当期官方说明为准")))
+
+# P13：栏目页声明同样只留引用块一处，关键短语各恰 1 次。
+_idx_cnt_bad = [(k, _idx.count(k)) for k in P13_ONCE if _idx.count(k) != 1]
+chk("栏目页关键合规短语各恰 1 次（P13 去重）", not _idx_cnt_bad,
+    "；".join("%s×%d" % (k, n) for k, n in _idx_cnt_bad))
+_idx_r_bad = [(k, _idx.count(k)) for k in P13_RISK if _idx.count(k) != 1]
+chk("栏目页正文风险提示恰 1 次（P13 去重）", not _idx_r_bad,
+    "；".join("%s×%d" % (k, n) for k, n in _idx_r_bad))
+_idx_z_bad = [(k, _idx.count(k)) for k in P13_ZERO if _idx.count(k) != 0]
+chk("栏目页无正文末尾合规复述句（P13 去重）", not _idx_z_bad,
+    "；".join("%s×%d" % (k, n) for k, n in _idx_z_bad))
+_idx_plain = plain_body(_idx)
+_idx_f_bad = [(k, _idx_plain.count(k)) for k in P13_FLAG_ONLY if _idx_plain.count(k) != 0]
+chk("栏目页 FLAG 块外无合规声明复述（P13 去重）", not _idx_f_bad,
+    "；".join("%s×%d" % (k, n) for k, n in _idx_f_bad))
 
 gi = (ROOT / ".gitignore").read_text(encoding="utf-8")
 chk("稿件数量 = 10（#28/#29）", len(POSTS) == 10, "实际 %d" % len(POSTS))

@@ -31,7 +31,7 @@ taxonomies = {}
   disableSpecial1stPost = true
   disableScrollToTop = false
   defaultTheme = "auto"
-  homeInfoParams = { Title = "推广团队合作与邀请说明", Content = "说明团队邀请的合作方式、适用人群与规则边界。本页为第三方推广合作信息，含推广链接，非平台官方页面、非招聘、不作收益承诺。" }
+  homeInfoParams = { Title = "推广团队合作与邀请说明", Content = "说明团队邀请的合作方式、适用人群与规则边界。" }
   socialIcons = []
 
 [params.assets]

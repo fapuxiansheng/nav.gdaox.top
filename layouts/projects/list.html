@@ -6,7 +6,7 @@
 
 <div class="project-intro">{{ .Content }}</div>
 
-<h2 class="section-title">本栏目文章（{{ len .Pages }} 篇）</h2>
+<h2 class="section-title">{{ len .Pages }} 篇项目介绍</h2>
 <div class="project-list">
   {{ range .Pages.ByWeight }}
   <article class="project-card">

@@ -71,5 +71,4 @@
   border: 1px solid var(--border); border-radius: 12px; background: var(--entry);
 }
 .invite-cta h2 { margin: .75rem 0 10px; font-size: 20px; }
-.invite-cta .promo-note { margin: 1.25rem 0 0; }
 .back-link { font-size: 13px; color: var(--secondary); }

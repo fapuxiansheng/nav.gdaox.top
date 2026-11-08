@@ -1,8 +1,6 @@
 {{ $cta := hugo.Data.invite.cta }}
 {{ $pending := eq $cta.url "REPLACE_WITH_INVITE_URL" }}
 <section class="invite-cta">
-  <p class="ad-label">广告｜推广链接</p>
-  <p class="scope-label">推广合作信息 · 非招聘 · 非收益承诺</p>
   <h2>{{ $cta.label }}</h2>
   <p class="invite-note">{{ $cta.note }}</p>
   {{ if $pending }}
@@ -12,8 +10,4 @@
   <p class="invite-code">本站专属邀请码：<strong>{{ $cta.code }}</strong><span class="invite-code-hint">若上方链接打不开，可在注册页手动填写该邀请码</span></p>
   {{ end }}
   <p class="invite-verify">链接核对：{{ $cta.verify }}</p>
-  <blockquote class="promo-note">
-    <p>声明：本页为<strong>推广合作信息</strong>，不是招聘或兼职岗位信息，也不构成任何收益承诺。通过本页链接注册<strong>不会增加你的费用</strong>；入驻与注册均免费，本站不收取任何费用、不代收费用、不代结算。项目规则、有效动作定义、结算周期与税费一律以任推邦平台当期官方说明为准，结果存在不确定性。</p>
-    <p>详情见 <a href="/about/">关于本站</a>。</p>
-  </blockquote>
 </section>
