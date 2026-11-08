@@ -9,10 +9,11 @@
 
 按总纲 #26（2026-11-08）：4 篇项目介绍配套稿挂载为 /projects/ 正式栏目，
 新增首页入链、栏目列表页、4 篇文章页、sitemap 条数与文章页 CTA 校验。
+按总纲 #27（2026-11-08）：4 篇改为简版（正文约 600–800 字），重心为「加入团队 →
+下载 App → 熟悉规则」；CTA 由页尾前置到正文开头；不再引用官网宣传数字
+（#24/#26 放宽保留但闲置），改校验三步引导、无官网数字、无第三方下载入口。
 口径分工：首页／关于页／栏目列表页按 #22/#23 加严（不写收益数字、不列诱导词）；
-4 篇文章页按 #24 允许引用官网宣传数字，但必须带「平台宣传口径／不是收益承诺／
-以平台当期官方说明为准」标注，且诱导词仍一律拦。链接与邀请码只以
-data/invite.yaml 为唯一真源，任何页面换码漏改均被阻断。
+链接与邀请码只以 data/invite.yaml 为唯一真源，任何页面换码漏改均被阻断。
 """
 from pathlib import Path
 import html
@@ -154,16 +155,27 @@ list_slugs = sorted(set(re.findall(r"/projects/([a-z0-9-]+)/", proj_list)))
 chk("列表页收录 4 篇文章入链", len(list_slugs) == 4, "实际 %s" % list_slugs)
 chk("列表页有 1 个可点团队邀请按钮",
     len(re.findall(r"<a[^>]*invite-btn[^>]*>", proj_list)) == 1)
+chk("列表页含先加入团队/下载 App 引导（#27）",
+    all(x in proj_list for x in ("加入团队", "下载 App")))
+chk("列表页不挂官网下载入口（#27）",
+    not any(x in proj_list for x in ("rentuiapp.com/app", "rentuibang.top")))
 
 for page in PROJ_PAGES:
     name = page.parent.name
     s = read(page)
     chk(name + "：广告标识与合规定性",
         all(x in s for x in ("广告｜推广链接", "推广合作信息", "非招聘", "非收益承诺")))
-    chk(name + "：宣传数字已标注平台口径（#24）",
-        all(x in s for x in ("平台宣传口径", "不是收益承诺", "以平台当期官方说明为准")))
-    chk(name + "：无官方 SEO 码与投放域",
-        not any(x in s for x in ("66666600", "seo_rtb", "dt.bd.cn")))
+    chk(name + "：简版不引用官网宣传数字（#27）",
+        not any(x in s for x in ("￥", "单笔最高收益", "每单可赚", "正在推广人数")))
+    chk(name + "：三步引导齐全且顺序正确（#27）",
+        all(x in s for x in ("加入团队", "下载 App", "先熟悉", "第一步", "第二步", "第三步"))
+        and s.find("第一步") < s.find("第二步") < s.find("第三步"))
+    chk(name + "：CTA 已前置到正文之前（#27）",
+        "invite-cta" in s and "project-content" in s
+        and s.find("invite-cta") < s.find("project-content"))
+    chk(name + "：无官网下载/注册入口与官方投放域",
+        not any(x in s for x in ("rentuiapp.com/app", "rentuibang.top",
+                                 "dt.bd.cn", "66666600", "seo_rtb")))
     hits = [w for w in BANNED if w in s]
     chk(name + "：无诱导性收益话术", not hits,
         "命中：" + "、".join(hits) if hits else "")

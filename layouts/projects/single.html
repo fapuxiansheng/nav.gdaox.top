@@ -4,9 +4,9 @@
   <p class="page-desc">{{ .Params.description }}</p>
 </header>
 
-<article class="project-content">{{ .Content }}</article>
-
 {{ partial "invite_cta.html" . }}
+
+<article class="project-content">{{ .Content }}</article>
 
 <p class="back-link"><a href="/projects/">返回项目介绍</a>　·　<a href="/">返回首页</a></p>
 {{ end }}

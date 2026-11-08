@@ -4,19 +4,15 @@
 用法：python check_drafts.py
 退出码：0 = 全绿；1 = 存在阻断项。
 
-按总纲 #26（2026-11-08）：4 篇配套稿已从 drafts/ 升格为站点正式栏目页
-content/projects/NN-*.md 并 push 上线，故扫描路径随之迁移；drafts/ 仍只保留
-内部交付说明（继续在 .gitignore 中，不进公开仓库）。
-只扫描 content/projects/NN-*.md；下划线开头的栏目 _index.md 不参与逐篇检查。
+按总纲 #27（2026-11-08）：4 篇改为简版（正文约 600–800 字，含固定
+声明与链接的文件约 1300 字），重心从「项目科普」
+转为「引导加入团队 → 下载 App → 熟悉规则」；不再引用官网宣传数字，
+#24/#26 的放宽条款保留但闲置。官网 /app/ 下载页整页带官方投放码
+66666600，故稿件不挂任何第三方下载／注册链接，只做文字引导。
 
-与 check_build.py 分工：后者管构建产物 public/（首页／关于页／栏目列表页按
-#22/#23 加严不写收益数字；4 篇文章页按 #24 允许引用官网宣传数字，但须带
-标注），本脚本管源稿——按 #24 允许引用官网宣传数字，但必须标注平台宣传口径、
-核验日期与「不是收益承诺」，且诱导词仍一律拦。
-
-按 #25（2026-11-08）：四篇稿件统一刊登同一个团队邀请链接与邀请码，
-不再逐项目留占位。链接/邀请码的**唯一真源仍是 data/invite.yaml**；
-本脚本从真源取值，逐篇校验逐字一致，换码漏改即阻断，脚本内不写死任何码。
+与 check_build.py 分工：后者管构建产物 public/（首页／关于页／栏目列表页
+按 #22/#23 加严；4 篇文章页按 #27 校验三步引导、无官网数字、CTA 前置）。
+本脚本管源稿。链接与邀请码的唯一真源仍是 data/invite.yaml，换码漏改即拦。
 """
 from pathlib import Path
 import re
@@ -36,14 +32,16 @@ BANNED = [
 ]
 
 # 归因与泄露红线：官方投放入口、旧占位口径、本地草稿期表述、内部路径、
-# 图片、互动引导。#26 后「挂载到站点时／挂载后」等未来时表述一律不得残留。
-# 注意：tg.bd.cn 与邀请码不再列入禁止项（#25），改由下方真源一致性校验。
+# 图片、互动引导。#27 追加：官网宣传数字、官网 APP 下载页／镜像域、
+# 应用商店等未经核实的下载入口，一律不得回到简版稿件。
 FORBIDDEN = [
     "66666600", "seo_rtb", "dt.bd.cn",
     "REPLACE_WITH_INVITE_URL", "【待景行在后台申请项目并生成后回填】",
     "本文不重复刊登", "本项目专属推广链接", "挂载", "draft: true",
     "![", "欢迎留言", "E:\\", "E:/", "Default Project", "workbuddy",
     "https://gdaox.top", "http://gdaox.top",
+    "￥", "单笔最高收益", "每单可赚", "正在推广人数", "推广人数",
+    "rentuiapp.com/app", "rentuibang.top", "qr-app-download", "应用商店",
 ]
 
 REQUIRED = [
@@ -53,9 +51,7 @@ REQUIRED = [
     "不收取任何费用",
     "不代收费用、不代结算",
     "以平台当期官方说明为准",
-    "平台宣传口径",
     "核验日期",
-    "不是收益承诺",
     "## TL;DR",
     "## 参考阅读",
     "任推邦官网项目列表页",
@@ -64,6 +60,16 @@ REQUIRED = [
     "共用这一个入口",
     "手动填入",
     "不得直接引用",
+    # #27 简版重心：加入团队 / 下载 App / 先熟悉三步
+    "加入团队",
+    "下载 App",
+    "先熟悉",
+    "第一步",
+    "第二步",
+    "第三步",
+    "任推邦 App",
+    "本站不提供安装包",
+    "结果存在不确定性",
 ]
 
 rows = []
@@ -118,20 +124,18 @@ for p in POSTS:
     chk(name + "：标题有落点", bool(title) and len(title) >= 12 and ("：" in title or "，" in title))
 
     miss = [s for s in REQUIRED if s not in text]
-    chk(name + "：必备声明/结构齐全", not miss, "缺：" + "、".join(miss) if miss else "")
+    chk(name + "：必备声明/结构与三步引导齐全", not miss, "缺：" + "、".join(miss) if miss else "")
+
+    chk(name + "：三步引导顺序正确（#27）",
+        text.find("第一步") < text.find("第二步") < text.find("第三步")
+        and all(k in text for k in ("第一步", "第二步", "第三步")))
 
     hits = [w for w in BANNED if w in text]
     chk(name + "：无诱导性收益话术", not hits, "命中：" + "、".join(hits) if hits else "")
 
     leaks = [w for w in FORBIDDEN if w in text]
-    chk(name + "：无官方码/旧占位/草稿期表述/内部路径/图片/互动引导", not leaks,
+    chk(name + "：无官方码/官网宣传数字/第三方下载入口/内部路径", not leaks,
         "命中：" + "、".join(leaks) if leaks else "")
-
-    # #24 有限放宽的代价：凡引用官网金额，必须同篇带宣传口径与免责。
-    has_money = "￥" in text or "单笔最高收益" in text
-    chk(name + "：宣传数字已标注口径",
-        (not has_money) or all(s in text for s in
-                               ("平台宣传口径", "不是收益承诺", "以平台当期官方说明为准")))
 
     # #25：统一入口与真源逐字一致，防止换码漏改或误挂官方投放链接。
     chk(name + "：统一入口链接与真源逐字一致且只出现一次",
@@ -147,7 +151,8 @@ for p in POSTS:
     chk(name + "：邀请码手填兜底说明", "手动填入 `" + INVITE_CODE + "`" in text)
 
     chars = len(re.sub(r"\s", "", text))
-    chk(name + "：篇幅 ≥800 字（非空壳）", chars >= 800, "%d 字" % chars)
+    # 含不可删的固定推广声明、统一邀请链接与参考来源；正文观感约 600–800 字。
+    chk(name + "：简版篇幅 700–1400 字（#27）", 700 <= chars <= 1400, "%d 字" % chars)
 
 gi = (ROOT / ".gitignore").read_text(encoding="utf-8")
 chk("稿件数量 = 4", len(POSTS) == 4, "实际 %d" % len(POSTS))
