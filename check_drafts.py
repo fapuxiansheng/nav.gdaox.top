@@ -28,6 +28,10 @@ P12（2026-11-08，执行动作）：列表页表述精简后加护栏——10 �
 P13（2026-11-08，执行动作）：同页合规声明去重——每篇只留开头 FLAG 块一处
 完整声明，正文末尾不再复述；新增「关键合规短语全稿各恰 1 次」与「FLAG 块外
 不得再出现合规短语」断言，防止重复声明回潮。
+P14（2026-11-08，执行动作）：关于页表述优化——去内部口径（报备／内容矩阵／
+对外渠道说明）、语义重复（同义句合并，合规要素不减）、句子拆短并按读者
+提问顺序重排；新增「关于页每个合规要素各恰 1 次」「旧重复表述与内部口径＝0」
+「关于页不含邀请链接与邀请码」断言。
 """
 from pathlib import Path
 import re
@@ -35,6 +39,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parent
 PROJECTS = ROOT / "content" / "projects"
+ABOUT = ROOT / "content" / "about.md"
 DRAFTS = ROOT / "drafts"
 INVITE = ROOT / "data" / "invite.yaml"
 POSTS = sorted(PROJECTS.glob("[0-9][0-9]-*.md"))
@@ -122,6 +127,40 @@ P13_FLAG_ONLY = [
 P13_ZERO = [
     "本页不是招聘，也不是兼职岗位；规则、活动状态与结算口径一律以平台当期官方说明为准。",
     "本页不是招聘，也不是兼职岗位",
+]
+
+# --- P14：关于页（content/about.md）合规要素唯一性 ---
+# 关于页无 CTA／promo-note，合规要素由普通段落承载，故表现为「每项各恰 1 次」：
+# 页面身份、定性、费用、收益、规则口径各只说一次，不再同页复述。
+ABOUT_ONCE = [
+    "推广说明页",                  # 页面身份
+    "推广合作信息",                # 合作性质定性
+    "推广链接",                    # 广告标识
+    "非官方声明",
+    "广告与推广声明",
+    "合作性质",
+    "内容边界",
+    "主体与联系",
+    "没有隶属、代理或授权关系",
+    "不会增加你的费用",            # 费用承诺（唯一承载处）
+    "不代收费用、不代结算",
+    "不提供任何形式的收益保证",    # 收益承诺（唯一承载处）
+    "不展示收益案例",
+    "不列补贴比例",
+    "不是招聘",
+    "注册与入驻免费",
+    "额外补贴",
+    "结果存在不确定性",
+    "以任推邦官方当期说明为准",
+]
+# P14 删除项，不得回流。删除的是「同义重复句」与「内部口径」，
+# 对应合规要素已由 ABOUT_ONCE 中的保留句承载，不构成削弱。
+ABOUT_ZERO = [
+    "平台报备",                # 内部合规动作，不进对外页
+    "内容矩阵",                # 内部视角
+    "对外渠道的统一说明",
+    "不向读者收取任何费用",    # 与「不会增加你的费用」同义重复
+    "不作收益承诺",            # 与「不提供任何形式的收益保证」同义重复
 ]
 
 
@@ -334,10 +373,34 @@ chk("drafts/ 仍被忽略（内部说明不进公开仓库）", "drafts/" in gi)
 chk("content/projects/ 未进忽略名单（随 #26 上线）",
     not any(line.strip().startswith("content") for line in gi.splitlines()))
 
+# --- P14：关于页源稿断言 ---
+if ABOUT.is_file():
+    _about = ABOUT.read_text(encoding="utf-8")
+    _about_body = re.sub(r"(?m)^---\s*\n.*?\n---\s*\n", "", _about, flags=re.S)
+    _a_cnt_bad = [(k, _about.count(k)) for k in ABOUT_ONCE if _about.count(k) != 1]
+    chk("关于页各合规要素各恰 1 次（P14 去重）", not _a_cnt_bad,
+        "；".join("%s×%d" % (k, n) for k, n in _a_cnt_bad))
+    _a_zero_bad = [(k, _about.count(k)) for k in ABOUT_ZERO if _about.count(k) != 0]
+    chk("关于页无同义重复句与内部口径（P14）", not _a_zero_bad,
+        "；".join("%s×%d" % (k, n) for k, n in _a_zero_bad))
+    _a_banned = [w for w in BANNED if w in _about]
+    chk("关于页无诱导性收益话术（P14）", not _a_banned,
+        "命中：" + "、".join(_a_banned) if _a_banned else "")
+    chk("关于页不含邀请链接与邀请码（P14 唯一真源边界）",
+        "tg.bd.cn" not in _about and INVITE_CODE not in _about
+        and not re.search(r"https?://", _about))
+    _a_chars = len(re.sub(r"\s", "", _about_body))
+    chk("关于页篇幅 ≤ 700 字（P14）", 0 < _a_chars <= 700, "%d 字" % _a_chars)
+    chk("关于页五个声明小标题齐全（P14）",
+        all(x in _about for x in ("非官方声明", "广告与推广声明", "合作性质",
+                                  "内容边界", "主体与联系")))
+else:
+    chk("content/about.md 存在", False, "文件缺失")
+
 failed = [r for r in rows if not r[1]]
 for label, ok, note in rows:
     print(("  OK   " if ok else " BLOCK ") + label + (("  | " + str(note)) if note else ""))
 
-print("\n%d 篇栏目稿；%d/%d 通过；阻断 %d 项" % (
+print("\n%d 篇栏目稿 ＋ 关于页；%d/%d 通过；阻断 %d 项" % (
     len(POSTS), len(rows) - len(failed), len(rows), len(failed)))
 sys.exit(1 if failed else 0)

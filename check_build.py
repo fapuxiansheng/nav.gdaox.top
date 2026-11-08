@@ -24,6 +24,9 @@ P13（2026-11-08，执行动作）：同页合规声明去重——列表页归�
 CTA 区块退化为纯转化模块（不再复述声明）。新增：body 可见文本内关键合规
 短语各恰 1 次、CTA 区块不含任何合规声明词、首页/列表页/文章页各只 1 个
 blockquote（声明块）。
+P14（2026-11-08，执行动作）：关于页表述优化——去内部口径、合并同义重复句、
+句子拆短重排；新增「关于页各合规要素在 body 可见文本内各恰 1 次」
+「旧重复表述与内部口径＝0」「关于页不含邀请链接与邀请码」断言。
 口径分工：首页／关于页／栏目列表页按 #22/#23 加严（不写收益数字、不列诱导词）；
 链接与邀请码只以 data/invite.yaml 为唯一真源，任何页面换码漏改均被阻断。
 """
@@ -41,6 +44,37 @@ PLACEHOLDER = "REPLACE_WITH_INVITE_URL"
 # 用的是 dt.bd.cn + 66666600，不在白名单内。换域名须同步改这里与 data。
 ALLOWED_HOSTS = ("tg.bd.cn",)
 SECTIONS = ["任推邦是什么", "团队邀请是做什么", "适合谁", "加入前先确认"]
+
+# --- P14：关于页合规要素唯一性词表（源稿层与产物层共用同一份） ---
+ABOUT_ONCE = [
+    "推广说明页",                  # 页面身份
+    "推广合作信息",                # 合作性质定性
+    "推广链接",                    # 广告标识
+    "非官方声明",
+    "广告与推广声明",
+    "合作性质",
+    "内容边界",
+    "主体与联系",
+    "没有隶属、代理或授权关系",
+    "不会增加你的费用",            # 费用承诺（唯一承载处）
+    "不代收费用、不代结算",
+    "不提供任何形式的收益保证",    # 收益承诺（唯一承载处）
+    "不展示收益案例",
+    "不列补贴比例",
+    "不是招聘",
+    "注册与入驻免费",
+    "额外补贴",
+    "结果存在不确定性",
+    "以任推邦官方当期说明为准",
+]
+# P14 删除项，不得回流（删除的是同义重复句与内部口径，合规要素未减）。
+ABOUT_ZERO = [
+    "平台报备",
+    "内容矩阵",
+    "对外渠道的统一说明",
+    "不向读者收取任何费用",
+    "不作收益承诺",
+]
 
 # 团队邀请主题的对外文案红线：不得出现补贴比例、收益数字与诱导性收益话术。
 # 任推邦官方 /team/ 页含 3%/5% 补贴说明，但对外落地页列比例即构成收益诱导；
@@ -215,6 +249,18 @@ chk("关于页含合作性质边界", "不是招聘" in about)
 about_hits = [w for w in BANNED if w in about]
 chk("关于页无补贴比例与收益诱导词", not about_hits,
     "命中：" + "、".join(about_hits) if about_hits else "")
+
+# --- P14：关于页同页唯一性（body 可见文本内计数） ---
+_about_body_txt = body_text(about)
+_a_cnt_bad = [(k, _about_body_txt.count(k)) for k in ABOUT_ONCE if _about_body_txt.count(k) != 1]
+chk("关于页各合规要素各恰 1 次（P14 去重）", not _a_cnt_bad,
+    "；".join("%s×%d" % (k, n) for k, n in _a_cnt_bad))
+_a_zero_bad = [(k, _about_body_txt.count(k)) for k in ABOUT_ZERO if _about_body_txt.count(k) != 0]
+chk("关于页无同义重复句与内部口径（P14）", not _a_zero_bad,
+    "；".join("%s×%d" % (k, n) for k, n in _a_zero_bad))
+chk("关于页不含邀请链接与邀请码（P14 唯一真源边界）",
+    "tg.bd.cn" not in _about_body_txt
+    and (not expected_code or expected_code not in _about_body_txt))
 
 # --- 项目介绍栏目（总纲 #26 挂载为正式栏目 / #28 扩为 10 篇）---
 PROJ_DIR = PUB / "projects"
