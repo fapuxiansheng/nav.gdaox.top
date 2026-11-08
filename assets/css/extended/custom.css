@@ -6,27 +6,38 @@
   border: 1px solid var(--border); border-radius: 6px;
   font-size: 12px; color: var(--secondary);
 }
+.scope-label { margin: .5rem 0 0; font-size: 12px; color: var(--secondary); }
+.invite-hero {
+  margin: 1.25rem 0 2rem; padding: 24px;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--entry);
+}
+.invite-hero h2 { margin: 0 0 10px; font-size: 20px; }
+.invite-note { font-size: 14px; opacity: .85; margin: 0 0 16px; }
+.invite-btn {
+  display: inline-block; padding: 8px 18px; border-radius: 8px;
+  background: var(--primary); color: #fff; font-size: 14px; text-decoration: none;
+}
+.invite-btn-pending { background: var(--border); color: var(--secondary); cursor: default; }
+.invite-code { margin: 14px 0 0; font-size: 13px; color: var(--secondary); }
+.invite-code strong { font-size: 15px; letter-spacing: .06em; color: var(--primary); }
+.invite-code-hint { display: block; margin-top: 4px; font-size: 12px; }
+.invite-verify { display: block; margin-top: 10px; font-size: 12px; color: var(--secondary); }
 .stage-note {
   margin: 1rem 0 0; padding: 10px 14px; font-size: 13px;
   border: 1px dashed var(--border); border-radius: 8px; color: var(--secondary);
 }
-.tool-grid {
+.section-title { font-size: 1.2rem; margin: 2rem 0 0; }
+.info-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 18px; margin: 1rem 0 2rem;
 }
-.tool-card {
+.info-card {
   border: 1px solid var(--border); border-radius: 12px; padding: 20px;
   background: var(--entry); transition: transform .2s, border-color .2s;
 }
-.tool-card:hover { transform: translateY(-3px); border-color: var(--primary); }
-.tool-kind { font-size: 12px; color: var(--secondary); }
-.tool-card h3 { margin: 6px 0 8px; font-size: 18px; }
-.tool-card p { font-size: 14px; opacity: .85; margin: 0 0 10px; }
-.tool-card p.tool-note { font-size: 13px; }
-.tool-btn {
-  display: inline-block; padding: 6px 14px; border-radius: 8px;
-  background: var(--primary); color: #fff; font-size: 14px; text-decoration: none;
-}
-.tool-btn-pending { background: var(--border); color: var(--secondary); cursor: default; }
-.tool-verify { display: block; margin-top: 10px; font-size: 12px; color: var(--secondary); }
+.info-card:hover { transform: translateY(-3px); border-color: var(--primary); }
+.info-kind { font-size: 12px; color: var(--secondary); }
+.info-card h3 { margin: 6px 0 8px; font-size: 18px; }
+.info-card p { font-size: 14px; opacity: .85; margin: 0 0 10px; }
+.info-card p.info-note { font-size: 13px; color: var(--secondary); }
 .promo-note { border-left: 3px solid var(--border); padding-left: 1rem; font-size: 14px; opacity: .9; }

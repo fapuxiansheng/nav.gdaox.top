@@ -1,35 +1,42 @@
 {{ define "main" }}
-{{ $pending := len (where hugo.Data.tools "url" "REPLACE_WITH_RENTUIBANG_URL") }}
+{{ $cta := hugo.Data.invite.cta }}
+{{ $pending := eq $cta.url "REPLACE_WITH_INVITE_URL" }}
 <header class="page-header">
   <h1 class="page-title">{{ .Site.Params.homeInfoParams.Title }}</h1>
   <p class="page-desc">{{ .Site.Params.homeInfoParams.Content }}</p>
 </header>
 
 <p class="ad-label">广告｜推广链接</p>
+<p class="scope-label">推广合作信息 · 非招聘 · 非收益承诺</p>
 
-{{ if gt $pending 0 }}
-<p class="stage-note">资料入口正在准备中，当前页面用于渠道说明与推广报备；入口开放后，下方按钮会变为可点击。</p>
-{{ end }}
+<section class="invite-hero">
+  <h2>{{ $cta.label }}</h2>
+  <p class="invite-note">{{ $cta.note }}</p>
+  {{ if $pending }}
+  <span class="invite-btn invite-btn-pending">入口待开放</span>
+  <p class="stage-note">专属邀请入口正在准备中，当前页面用于渠道说明与推广报备；入口开放后，上方按钮会变为可点击。</p>
+  {{ else }}
+  <a class="invite-btn" href="{{ $cta.url }}" target="_blank" rel="sponsored nofollow noopener">{{ $cta.action }}</a>
+  <p class="invite-code">本站专属邀请码：<strong>{{ $cta.code }}</strong><span class="invite-code-hint">若上方链接打不开，可在注册页手动填写该邀请码</span></p>
+  {{ end }}
+  <span class="invite-verify">{{ if $pending }}资料整理：{{ $cta.verify }}{{ else }}链接核对：{{ $cta.verify }}{{ end }}</span>
+</section>
 
-<div class="tool-grid">
-  {{ range hugo.Data.tools }}
-  <div class="tool-card">
-    <span class="tool-kind">{{ .kind }}</span>
+<h2 class="section-title">加入前先了解</h2>
+<div class="info-grid">
+  {{ range hugo.Data.invite.sections }}
+  <div class="info-card">
+    <span class="info-kind">{{ .kind }}</span>
     <h3>{{ .name }}</h3>
     <p>{{ .desc }}</p>
-    <p class="tool-note">{{ .note }}</p>
-    {{ if eq .url "REPLACE_WITH_RENTUIBANG_URL" }}
-    <span class="tool-btn tool-btn-pending">入口待开放</span>
-    {{ else }}
-    <a class="tool-btn" href="{{ .url }}" target="_blank" rel="sponsored nofollow noopener">{{ .action }}</a>
-    {{ end }}
-    <span class="tool-verify">{{ if eq .url "REPLACE_WITH_RENTUIBANG_URL" }}资料整理：{{ .verify }}{{ else }}链接核对：{{ .verify }}{{ end }}</span>
+    <p class="info-note">{{ .note }}</p>
   </div>
   {{ end }}
 </div>
 
 <blockquote class="promo-note">
-  <p>声明：本页部分链接为推广链接。若你通过链接完成注册或保存，运营方可能获得平台佣金，<strong>不会增加你的费用</strong>。本站仅做工具与资料介绍，不存储影音及盗版资源。</p>
+  <p>声明：本页为<strong>推广合作信息</strong>，不是招聘或兼职岗位信息，也不构成任何收益承诺。通过本页链接注册，运营方可能按平台当期规则获得额外补贴，<strong>不会增加你的费用</strong>；入驻与注册均免费，本站不收取任何费用、不代收费用、不代结算。</p>
+  <p>补贴比例、有效动作定义、结算周期与税费等一律以任推邦平台当期官方说明为准；本站为第三方整理页面，与平台及所列项目官方无隶属关系。请自行阅读平台规则并评估时间投入与结果的不确定性。</p>
   <p>详情见 <a href="/about/">关于本站</a>。</p>
 </blockquote>
 {{ end }}

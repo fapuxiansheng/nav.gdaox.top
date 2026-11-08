@@ -1,6 +1,6 @@
 baseURL = "https://nav.gdaox.top/"
 locale = "zh-cn"
-title = "实用网盘与 AI 工具合集"
+title = "任推邦团队邀请说明 · 恒学斋"
 theme = "PaperMod"
 timeZone = "Asia/Shanghai"
 enableRobotsTXT = true
@@ -20,7 +20,7 @@ taxonomies = {}
   unsafe = false
 
 [params]
-  description = "常用网盘与 AI 工具的资料入口整理，页面含推广链接"
+  description = "任推邦推广团队合作与邀请方式的第三方说明页，含推广合作信息；非官方、非招聘、不作收益承诺"
   ShowReadingTime = false
   ShowShareButtons = false
   ShowPostNavLinks = false
@@ -30,7 +30,7 @@ taxonomies = {}
   disableSpecial1stPost = true
   disableScrollToTop = false
   defaultTheme = "auto"
-  homeInfoParams = { Title = "实用网盘与 AI 工具合集", Content = "按用途整理常用云盘与 AI 工具的资料入口。本页含推广链接，详见页面底部声明与「关于」。" }
+  homeInfoParams = { Title = "推广团队合作与邀请说明", Content = "说明团队邀请的合作方式、适用人群与规则边界。本页为第三方推广合作信息，含推广链接，非平台官方页面、非招聘、不作收益承诺。" }
   socialIcons = []
 
 [params.assets]
