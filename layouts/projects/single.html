@@ -1,0 +1,12 @@
+{{ define "main" }}
+<header class="page-header">
+  <h1 class="page-title">{{ .Title }}</h1>
+  <p class="page-desc">{{ .Params.description }}</p>
+</header>
+
+<article class="project-content">{{ .Content }}</article>
+
+{{ partial "invite_cta.html" . }}
+
+<p class="back-link"><a href="/projects/">返回项目介绍</a>　·　<a href="/">返回首页</a></p>
+{{ end }}

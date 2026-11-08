@@ -1,0 +1,23 @@
+{{ define "main" }}
+<header class="page-header">
+  <h1 class="page-title">{{ .Title }}</h1>
+  <p class="page-desc">{{ .Params.description }}</p>
+</header>
+
+<div class="project-intro">{{ .Content }}</div>
+
+<h2 class="section-title">本栏目文章（{{ len .Pages }} 篇）</h2>
+<div class="project-list">
+  {{ range .Pages.ByWeight }}
+  <article class="project-card">
+    <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+    <p>{{ .Params.description }}</p>
+    <a class="project-more" href="{{ .RelPermalink }}">阅读全文 →</a>
+  </article>
+  {{ end }}
+</div>
+
+{{ partial "invite_cta.html" . }}
+
+<p class="back-link"><a href="/">返回首页</a>　·　<a href="/about/">关于本站</a></p>
+{{ end }}

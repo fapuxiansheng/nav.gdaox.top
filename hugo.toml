@@ -4,8 +4,9 @@ title = "任推邦团队邀请说明 · 恒学斋"
 theme = "PaperMod"
 timeZone = "Asia/Shanghai"
 enableRobotsTXT = true
-# 主动精简（非兼容补丁）：本站只有首页 + 关于页，不生成 RSS 与空分类/标签页，
-# sitemap 只保留 2 条 URL。已验证官方最新版 PaperMod 不加此项也能在 Hugo 0.166 原生构建。
+# 主动精简（非兼容补丁）：本站不生成 RSS 与空分类/标签页，
+# sitemap 只保留首页、关于页、项目介绍栏目及其 4 篇文章。
+# 已验证官方最新版 PaperMod 不加此项也能在 Hugo 0.166 原生构建。
 disableKinds = ["RSS", "taxonomy", "term"]
 taxonomies = {}
 
@@ -20,7 +21,7 @@ taxonomies = {}
   unsafe = false
 
 [params]
-  description = "任推邦推广团队合作与邀请方式的第三方说明页，含推广合作信息；非官方、非招聘、不作收益承诺"
+  description = "任推邦推广团队合作与邀请方式的第三方说明页，含代表性项目介绍与推广合作信息；非官方、非招聘、不作收益承诺"
   ShowReadingTime = false
   ShowShareButtons = false
   ShowPostNavLinks = false
@@ -44,9 +45,13 @@ taxonomies = {}
   url = "/"
   weight = 1
 [[menu.main]]
+  name = "项目介绍"
+  url = "/projects/"
+  weight = 2
+[[menu.main]]
   name = "关于"
   url = "/about/"
-  weight = 2
+  weight = 3
 
 [sitemap]
   changefreq = "weekly"

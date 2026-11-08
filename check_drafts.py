@@ -1,29 +1,32 @@
 #!/usr/bin/env python3
-"""推广站配套项目介绍稿自检（纯标准库、只读 drafts/ 与 data/invite.yaml，不联网）。
+"""推广站「项目介绍」栏目稿自检（纯标准库、只读 content/projects/ 与 data/invite.yaml，不联网）。
 
 用法：python check_drafts.py
 退出码：0 = 全绿；1 = 存在阻断项。
 
-只扫描 drafts/NN-*.md；下划线开头的内部交付说明不参与。
-与 check_build.py 分工：后者只管构建产物 public/（首页＋关于页，按 #22/#23
-加严口径禁收益数字），本脚本管「配套稿」——按 #24 允许引用官网宣传数字，
-但必须标注平台宣传口径、核验日期与「不是收益承诺」，且诱导词仍一律拦。
+按总纲 #26（2026-11-08）：4 篇配套稿已从 drafts/ 升格为站点正式栏目页
+content/projects/NN-*.md 并 push 上线，故扫描路径随之迁移；drafts/ 仍只保留
+内部交付说明（继续在 .gitignore 中，不进公开仓库）。
+只扫描 content/projects/NN-*.md；下划线开头的栏目 _index.md 不参与逐篇检查。
+
+与 check_build.py 分工：后者管构建产物 public/（首页／关于页／栏目列表页按
+#22/#23 加严不写收益数字；4 篇文章页按 #24 允许引用官网宣传数字，但须带
+标注），本脚本管源稿——按 #24 允许引用官网宣传数字，但必须标注平台宣传口径、
+核验日期与「不是收益承诺」，且诱导词仍一律拦。
 
 按 #25（2026-11-08）：四篇稿件统一刊登同一个团队邀请链接与邀请码，
 不再逐项目留占位。链接/邀请码的**唯一真源仍是 data/invite.yaml**；
 本脚本从真源取值，逐篇校验逐字一致，换码漏改即阻断，脚本内不写死任何码。
-
-注：公开仓库副本不含 drafts/（已在 .gitignore 忽略，配套稿为本地草稿），
-本脚本只在本地工作副本运行，不参与 Cloudflare Pages 构建。
 """
 from pathlib import Path
 import re
 import sys
 
 ROOT = Path(__file__).resolve().parent
+PROJECTS = ROOT / "content" / "projects"
 DRAFTS = ROOT / "drafts"
 INVITE = ROOT / "data" / "invite.yaml"
-POSTS = sorted(DRAFTS.glob("[0-9][0-9]-*.md"))
+POSTS = sorted(PROJECTS.glob("[0-9][0-9]-*.md"))
 
 # 与站点 check_build.py 的 BANNED 保持同一套底线：否定式举例同样拦截。
 BANNED = [
@@ -32,12 +35,13 @@ BANNED = [
     "持续受益", "下级越多", "发展下线", "加盟费",
 ]
 
-# 归因与泄露红线：官方投放入口、旧占位口径、内部路径、图片、互动引导。
+# 归因与泄露红线：官方投放入口、旧占位口径、本地草稿期表述、内部路径、
+# 图片、互动引导。#26 后「挂载到站点时／挂载后」等未来时表述一律不得残留。
 # 注意：tg.bd.cn 与邀请码不再列入禁止项（#25），改由下方真源一致性校验。
 FORBIDDEN = [
     "66666600", "seo_rtb", "dt.bd.cn",
     "REPLACE_WITH_INVITE_URL", "【待景行在后台申请项目并生成后回填】",
-    "本文不重复刊登", "本项目专属推广链接",
+    "本文不重复刊登", "本项目专属推广链接", "挂载", "draft: true",
     "![", "欢迎留言", "E:\\", "E:/", "Default Project", "workbuddy",
     "https://gdaox.top", "http://gdaox.top",
 ]
@@ -79,7 +83,7 @@ def load_invite():
 
 
 if not POSTS:
-    print("BLOCK  drafts/ 下未找到 NN-*.md 稿件")
+    print("BLOCK  content/projects/ 下未找到 NN-*.md 稿件")
     sys.exit(1)
 
 INVITE_URL, INVITE_CODE = load_invite()
@@ -94,11 +98,19 @@ chk("真源 URL 内邀请码 = cta.code",
     and bool(re.fullmatch(r"\d{4,12}", INVITE_CODE)))
 
 titles = []
+slugs = []
 for p in POSTS:
     name = p.name
     text = p.read_text(encoding="utf-8")
     fm = re.match(r"^---\s*\n(.*?)\n---\s*\n", text, re.S)
-    chk(name + "：front matter 且为草稿", bool(fm) and "draft: true" in fm.group(1))
+    chk(name + "：front matter 且已转为正式页（draft: false）",
+        bool(fm) and "draft: false" in fm.group(1))
+
+    slug_m = re.search(r'(?m)^slug:\s*"([^"]+)"', text)
+    slug = slug_m.group(1) if slug_m else ""
+    slugs.append(slug)
+    chk(name + "：英文 slug 已设置",
+        bool(slug) and bool(re.fullmatch(r"[a-z0-9-]+", slug)), slug)
 
     m = re.search(r'(?m)^title:\s*"([^"]+)"', text)
     title = m.group(1) if m else ""
@@ -112,7 +124,7 @@ for p in POSTS:
     chk(name + "：无诱导性收益话术", not hits, "命中：" + "、".join(hits) if hits else "")
 
     leaks = [w for w in FORBIDDEN if w in text]
-    chk(name + "：无官方码/旧占位/内部路径/图片/互动引导", not leaks,
+    chk(name + "：无官方码/旧占位/草稿期表述/内部路径/图片/互动引导", not leaks,
         "命中：" + "、".join(leaks) if leaks else "")
 
     # #24 有限放宽的代价：凡引用官网金额，必须同篇带宣传口径与免责。
@@ -137,15 +149,20 @@ for p in POSTS:
     chars = len(re.sub(r"\s", "", text))
     chk(name + "：篇幅 ≥800 字（非空壳）", chars >= 800, "%d 字" % chars)
 
+gi = (ROOT / ".gitignore").read_text(encoding="utf-8")
 chk("稿件数量 = 4", len(POSTS) == 4, "实际 %d" % len(POSTS))
 chk("标题互不重复", len(set(titles)) == len(titles))
-chk("内部交付说明存在", (DRAFTS / "_选题与交付说明.md").is_file())
-chk("drafts 不进公开仓库", "drafts/" in (ROOT / ".gitignore").read_text(encoding="utf-8"))
+chk("slug 互不重复", len(set(slugs)) == len(slugs))
+chk("栏目 _index.md 存在", (PROJECTS / "_index.md").is_file())
+chk("内部交付说明仍在 drafts/", (DRAFTS / "_选题与交付说明.md").is_file())
+chk("drafts/ 仍被忽略（内部说明不进公开仓库）", "drafts/" in gi)
+chk("content/projects/ 未进忽略名单（随 #26 上线）",
+    not any(line.strip().startswith("content") for line in gi.splitlines()))
 
 failed = [r for r in rows if not r[1]]
 for label, ok, note in rows:
     print(("  OK   " if ok else " BLOCK ") + label + (("  | " + str(note)) if note else ""))
 
-print("\n%d 篇稿件；%d/%d 通过；阻断 %d 项" % (
+print("\n%d 篇栏目稿；%d/%d 通过；阻断 %d 项" % (
     len(POSTS), len(rows) - len(failed), len(rows), len(failed)))
 sys.exit(1 if failed else 0)

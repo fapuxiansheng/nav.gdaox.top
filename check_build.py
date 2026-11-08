@@ -6,6 +6,13 @@
 自动识别阶段一「空链版」与阶段二「正式版」，回填专属邀请链接后可反复复跑。
 阶段二额外校验：主按钮域名在专属邀请域白名单、URL 邀请码与 data/invite.yaml
 的 cta.code 一致、页面展示的邀请码与 data 一致（防误填官方 SEO 码 / 换码漏改）。
+
+按总纲 #26（2026-11-08）：4 篇项目介绍配套稿挂载为 /projects/ 正式栏目，
+新增首页入链、栏目列表页、4 篇文章页、sitemap 条数与文章页 CTA 校验。
+口径分工：首页／关于页／栏目列表页按 #22/#23 加严（不写收益数字、不列诱导词）；
+4 篇文章页按 #24 允许引用官网宣传数字，但必须带「平台宣传口径／不是收益承诺／
+以平台当期官方说明为准」标注，且诱导词仍一律拦。链接与邀请码只以
+data/invite.yaml 为唯一真源，任何页面换码漏改均被阻断。
 """
 from pathlib import Path
 import html
@@ -125,6 +132,63 @@ about_hits = [w for w in BANNED if w in about]
 chk("关于页无补贴比例与收益诱导词", not about_hits,
     "命中：" + "、".join(about_hits) if about_hits else "")
 
+# --- 项目介绍栏目（总纲 #26：4 篇配套稿挂载为正式栏目）---
+PROJ_DIR = PUB / "projects"
+PROJ_PAGES = sorted(PROJ_DIR.glob("*/index.html")) if PROJ_DIR.is_dir() else []
+proj_list = read(PROJ_DIR / "index.html")
+
+# Hugo --minify 输出无引号属性，须兼容 href=/projects/ 与 href="/projects/" 两种写法。
+chk("首页含 /projects/ 栏目入链",
+    bool(re.search(r'href=["\']?/projects/["\']?', idx)))
+chk("栏目列表页已生成", bool(proj_list))
+chk("4 篇文章页已生成", len(PROJ_PAGES) == 4, "实际 %d" % len(PROJ_PAGES))
+
+list_hits = [w for w in BANNED if w in proj_list]
+chk("列表页无补贴比例与收益诱导词", not list_hits,
+    "命中：" + "、".join(list_hits) if list_hits else "")
+chk("列表页不列收益数字（#22/#23 加严）",
+    "￥" not in proj_list and "单笔最高收益" not in proj_list)
+chk("列表页含推广标识与合规定性",
+    all(x in proj_list for x in ("广告｜推广链接", "推广合作信息", "非招聘", "非收益承诺")))
+list_slugs = sorted(set(re.findall(r"/projects/([a-z0-9-]+)/", proj_list)))
+chk("列表页收录 4 篇文章入链", len(list_slugs) == 4, "实际 %s" % list_slugs)
+chk("列表页有 1 个可点团队邀请按钮",
+    len(re.findall(r"<a[^>]*invite-btn[^>]*>", proj_list)) == 1)
+
+for page in PROJ_PAGES:
+    name = page.parent.name
+    s = read(page)
+    chk(name + "：广告标识与合规定性",
+        all(x in s for x in ("广告｜推广链接", "推广合作信息", "非招聘", "非收益承诺")))
+    chk(name + "：宣传数字已标注平台口径（#24）",
+        all(x in s for x in ("平台宣传口径", "不是收益承诺", "以平台当期官方说明为准")))
+    chk(name + "：无官方 SEO 码与投放域",
+        not any(x in s for x in ("66666600", "seo_rtb", "dt.bd.cn")))
+    hits = [w for w in BANNED if w in s]
+    chk(name + "：无诱导性收益话术", not hits,
+        "命中：" + "、".join(hits) if hits else "")
+    chk(name + "：无本地绝对路径泄漏",
+        not re.search(r"[A-Za-z]:[\\/]我的文档|Default Project", s))
+    c = re.search(r'rel=["\']?canonical["\']?\s+href=["\']?([^"\'>\s]+)', s)
+    chk(name + "：canonical 指向最终域名", bool(c and c.group(1).startswith(DOMAIN)),
+        c.group(1) if c else "未找到 canonical")
+
+    anchors = re.findall(r"<a[^>]*invite-btn[^>]*>", s)
+    chk(name + "：1 个可点团队邀请按钮", len(anchors) == 1, "实际 %d" % len(anchors))
+    if anchors:
+        chk(name + "：按钮 rel/target 合规",
+            all(k in anchors[0] for k in ("sponsored", "nofollow", "noopener", "_blank")))
+        h = re.search(r"href=[\"']?([^\"'\s>]+)", html.unescape(anchors[0]))
+        hv = h.group(1) if h else ""
+        chk(name + "：按钮域名为专属邀请域",
+            (urlparse(hv).hostname or "") in ALLOWED_HOSTS, hv or "未取到 href")
+        chk(name + "：按钮邀请码与 data 一致",
+            bool(expected_code) and ("invite_code=" + expected_code) in hv)
+    chk(name + "：展示邀请码与 data 一致",
+        bool(expected_code) and ("<strong>" + expected_code + "</strong>") in s)
+    chk(name + "：data 链接与页面一致",
+        bool(expected_url) and expected_url in html.unescape(s))
+
 robots = read(PUB / "robots.txt")
 chk("robots.txt 含 Sitemap 行", "Sitemap" in robots and DOMAIN in robots)
 
@@ -132,6 +196,9 @@ sitemap = read(PUB / "sitemap.xml")
 urls = re.findall(r"<loc>([^<]+)</loc>", sitemap)
 chk("sitemap 指向最终域名", bool(urls) and all(u.startswith(DOMAIN) for u in urls),
     "%d 条" % len(urls))
+proj_urls = sum("/projects/" in u for u in urls)
+chk("sitemap 含栏目页与 4 篇文章", proj_urls == 5, "实际 %d 条" % proj_urls)
+chk("sitemap 条数 = 7（首页/关于/栏目/4 篇）", len(urls) == 7, "%d 条" % len(urls))
 
 css_dir = PUB / "assets" / "css"
 css_files = list(css_dir.glob("*.css")) if css_dir.is_dir() else []
